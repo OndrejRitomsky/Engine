@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="API\RenderContextStream.h" />
+    <ClInclude Include="API\RenderResourceContext.h" />
+    <ClInclude Include="API\RenderUtil.h" />
+    <ClInclude Include="API\RenderContext.h" />
+    <ClInclude Include="API\IRenderDevice.h" />
+    <ClInclude Include="API\Resources\Resource.h" />
+    <ClInclude Include="API\Resources\Buffer.h" />
+    <ClInclude Include="API\Resources\Shader.h" />
+    <ClInclude Include="API\Resources\Texture.h" />
+    <ClInclude Include="API\Command\CommandProxy.h" />
+    <ClInclude Include="API\Command\JobPackage.h" />
+    <ClInclude Include="API\Command\Uniform.h" />
+    <ClInclude Include="API\Internal\Commands.h" />
+    <ClInclude Include="API\Command\CommandParameters.h" />
+    <ClInclude Include="GL\Internal\GLUtil.h" />
+    <ClInclude Include="GL\GLRenderDevice.h" />
+    <ClInclude Include="GL\Internal\GLWrapper.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="API\RenderContextStream.cpp" />
+    <ClCompile Include="API\RenderResourceContext.cpp" />
+    <ClCompile Include="API\RenderContext.cpp" />
+    <ClCompile Include="GL\Internal\GLUtil.cpp" />
+    <ClCompile Include="GL\GLRenderDevice.cpp" />
+    <ClCompile Include="GL\Internal\GLWrapper.cpp" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Console">
+      <UniqueIdentifier>{61f0231c-6979-45e1-ad04-c4b1219058c6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Console\ConsoleColor.h">
+      <Filter>Console</Filter>
+    </ClInclude>
+    <ClInclude Include="throwAssert.h" />
+    <ClInclude Include="Test.h" />
+    <ClInclude Include="TestConfig.h" />
+    <ClInclude Include="TestGroup.h" />
+    <ClInclude Include="TestGroupCollection.h" />
+    <ClInclude Include="PerformanceTest.h" />
+    <ClInclude Include="Timer.h" />
+    <ClInclude Include="PerfTestGroupCollection.h" />
+    <ClInclude Include="PerfTestGroup.h" />
+  </ItemGroup>
+</Project>
