@@ -31,13 +31,11 @@ namespace gl {
 		i32 length;
 	};
 
-	struct ShaderReflection {
-		core::HashMap<UniformData> uniformData; // This could be from pool allocator
-	};
-
+	// Not liking the hash map for uniforms, but to change that shader frontend is needed
+	// @TODO fix allocator for uniformData hashmap it should be pooled
 	struct ShaderData {
 		u32 shader;
-		u32 reflectionIndex; // This indirection exists, so hashmaps arent copied around if map with shaders is changing
+		core::HashMap<UniformData> uniformData;
 	};
 
 	//---------------------------------------------------------------------------
@@ -64,31 +62,35 @@ namespace gl {
 			{
 				const ShaderData& shaderData = _shaders.Get(it.value);
 				gl::program::Delete(shaderData.shader);
-				_shaderReflection.Remove(shaderData.reflectionIndex);
+				_shaders.Remove(it.value);
 				break;
 			}
 			case render::ResourceType::TEXTURE:
 			{
 				u32 index = _textures.Get(it.value);
 				gl::texture::Delete(index); 
+				_textures.Remove(it.value);
 				break;
-			}				
+			}
 			case render::ResourceType::VERTEX_BUFFER:
 			{
 				u32 index = _vertexBuffers.Get(it.value);
 				gl::vertex::DeleteBuffers(&index, 1);
+				_vertexBuffers.Remove(it.value);
 				break;
 			}
 			case render::ResourceType::VERTEX_DESCRIPTION:
 			{
 				u32 index = _vertexDescriptions.Get(it.value);
 				gl::vertex::DeleteArrayObjects(&index, 1);
+				_vertexDescriptions.Remove(it.value);
 				break;
 			}
 			case render::ResourceType::INDEX_BUFFER: 
 			{
 				u32 index = _indexBuffers.Get(it.value);
 				gl::vertex::DeleteBuffers(&index, 1);
+				_indexBuffers.Remove(it.value);
 				break;
 			}
 			default: ASSERT(false); break;
@@ -102,7 +104,6 @@ namespace gl {
 		_resourcesAllocator = resourcesAllocator;
 
 		_hashFunction = hashFunction;
-		_shaderReflection.Init(_resourcesAllocator, 1024);
 
 		_shaders.Init(resourcesAllocator, 128);
 		_textures.Init(resourcesAllocator, 128);
@@ -228,11 +229,11 @@ namespace gl {
 		const u32* index = _handleToIndexMap.Find(shaderResource->handle);
 		ASSERT(index);
 
-		ShaderData& shaderData = _shaders.Get(*index);
+		const ShaderData& shaderData = _shaders.Get(*index);
 		gl::program::Use(shaderData.shader);
 
 		ProcessJobPackageResources(resource, resourceEnd);
-		ProcessJobPackageUniforms(uniforms, jobPackage->uniformsCount, shaderData.reflectionIndex);
+		ProcessJobPackageUniforms(uniforms, jobPackage->uniformsCount, shaderData);
 		ProcessJobPackageBatch(&jobPackage->batch);
 		gl::vertex::UnbindArrayObject();
 	}
@@ -303,21 +304,18 @@ namespace gl {
 	}
 
 	//---------------------------------------------------------------------------
-	void GLRenderDevice::ProcessJobPackageUniforms(const void* data, u32 count, u32 reflectionIndex) {
+	void GLRenderDevice::ProcessJobPackageUniforms(const void* data, u32 count, const ShaderData& shaderData) {
 		const void* current = data;
 		u32 i = 0;
-
-		ShaderReflection& ref = _shaderReflection.Get(reflectionIndex);
-
 		while (i++ < count)
-			current = ProcessJobPackageUniform(current, &ref);
+			current = ProcessJobPackageUniform(current, shaderData);
 	}
 
 	//---------------------------------------------------------------------------
-	const void* GLRenderDevice::ProcessJobPackageUniform(const void* data, ShaderReflection* reflection) {
+	const void* GLRenderDevice::ProcessJobPackageUniform(const void* data, const ShaderData& shaderData) {
 		const render::UniformHeader* header = static_cast<const render::UniformHeader*>(data);
 		
-		const UniformData* uniform = reflection->uniformData.Find(header->nameHash);
+		const UniformData* uniform = shaderData.uniformData.Find(header->nameHash);
 
 		ASSERT(uniform);
 		const char* result = static_cast<const char*>(data);
@@ -424,21 +422,21 @@ namespace gl {
 
 		gl::shader::Delete(vs);
 		gl::shader::Delete(fs);
+		
+		u32 index;
+		{
+			ShaderData shaderData;
+			shaderData.shader = program;
+			shaderData.uniformData.Init(_resourcesAllocator);
 
-		ShaderReflection reflection;
-		reflection.uniformData.Init(_resourcesAllocator);
-
-		ShaderData shaderData;
-		shaderData.shader = program;
-		shaderData.reflectionIndex = _shaderReflection.Add(core::move(reflection));
-
-		u32 index = _shaders.Add(shaderData);
-		_handleToIndexMap.Add(shader->handle, index);
+			index = _shaders.Add(core::move(shaderData));
+			_handleToIndexMap.Add(shader->handle, index);
+		}
 		
 
 		// @TODO FIX this
 
-		core::HashMap<UniformData>& uniformMap = _shaderReflection.Get(shaderData.reflectionIndex).uniformData;
+		core::HashMap<UniformData>& uniformMap = _shaders.Get(index).uniformData;
 
 		i32 count = gl::uniform::Count(program);
 		for (i32 i = 0; i < count; ++i) {
@@ -584,7 +582,6 @@ namespace gl {
 
 		if (index) {
 			ShaderData& shaderData = _shaders.Get(*index);
-			_shaderReflection.Remove(shaderData.reflectionIndex);
 
 			gl::program::Delete(shaderData.shader);
 

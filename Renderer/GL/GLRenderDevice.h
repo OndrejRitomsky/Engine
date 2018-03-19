@@ -24,10 +24,8 @@ namespace render {
 }
 
 namespace gl {
-
 	// @TODO initialisation is stil not done (as SDL2 is still used)
 
-	struct ShaderReflection;
 	struct ShaderData;
 
 	// Used for hashing uniformnames
@@ -48,8 +46,8 @@ namespace gl {
 		void ProcessJobPackage(const render::JobPackage* jobPackage);
 		void ProcessJobPackageResources(const render::Resource* resourceBegin, const render::Resource* resourceEnd);
 		void ProcessJobPackageResource(const render::Resource* resource, u32& inOutTextureCount);
-		void ProcessJobPackageUniforms(const void* data, u32 count, u32 reflectionIndex);
-		const void* ProcessJobPackageUniform(const void* data, ShaderReflection* reflection);
+		void ProcessJobPackageUniforms(const void* data, u32 count, const ShaderData& shaderData);
+		const void* ProcessJobPackageUniform(const void* data, const ShaderData& shaderData);
 
 		void ProcessJobPackageBatch(const render::BatchDescription* batch);
 
@@ -75,8 +73,6 @@ namespace gl {
 		core::IAllocator* _resourcesAllocator;
 
 		HashFunction _hashFunction;
-
-		core::LookupArray<ShaderReflection> _shaderReflection;
 
 		core::LookupArray<ShaderData> _shaders;
 		core::LookupArray<u32> _textures;

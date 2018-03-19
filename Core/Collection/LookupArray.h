@@ -11,6 +11,8 @@ namespace core {
 
 	// Doesnt support reserve, only as initial capacity
 	// Doesnt support clear, doesnt know what is hole (external keys must be held)
+	// !! Upon destruction array has to empty, implementation does not know where
+	//    holes are and therefore cant call destructors
 	template<typename Type>
 	class LookupArray {
 	private:

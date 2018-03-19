@@ -4,6 +4,7 @@
 
 #include "Core/CoreAssert.h"
 #include "Core/Allocator/IAllocator.h"
+#include "Core/Allocator/Reallocation.h"
 
 namespace core {
 	//---------------------------------------------------------------------------
@@ -17,6 +18,7 @@ namespace core {
 	//---------------------------------------------------------------------------
 	template<typename Type>
 	LookupArray<Type>::~LookupArray() {
+		ASSERT(_base.size == 0); // cant call destructors, array doesnt know where holes are
 		if (_base.data)
 			_allocator->Deallocate(_base.data);
 	}
@@ -26,7 +28,7 @@ namespace core {
 	inline void LookupArray<Type>::Init(IAllocator* allocator, u32 capacity) {
 		ASSERT(!_allocator);
 		_allocator = allocator;
-		_base.elementSize = sizeof(Type);		
+		_base.elementSize = sizeof(Type);
 		_base.data = ReallocateMove<Type>(_allocator, nullptr, 0, capacity);
 		_base.capacity = capacity;
 	}
