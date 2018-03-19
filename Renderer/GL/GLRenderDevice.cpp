@@ -55,29 +55,45 @@ namespace gl {
 		if (_commandBuffer)
 			_resourcesAllocator->Deallocate(_commandBuffer);
 
-		ASSERT2(_shaders.Count() == 0, "Deallocate commands must be sent!");
-		ASSERT2(_textures.Count() == 0, "Deallocate commands must be sent!");
-		ASSERT2(_vertexDescriptions.Count() == 0, "Deallocate commands must be sent!");
-		ASSERT2(_vertexBuffers.Count() == 0, "Deallocate commands must be sent!");
-		ASSERT2(_indexBuffers.Count() == 0, "Deallocate commands must be sent!");
+		ASSERT2(_handleToIndexMap.Count() == 0, "Deallocate commands must be sent!");
 
-		// THIS CALLS MIGHT ASSERT, it might be too late deleting device, thats why the^ asserts
-		for (auto& value : _shaders) {
-			gl::program::Delete(value.shader);
-			_shaderReflection.Remove(value.reflectionIndex);
+		for (auto& it = _handleToIndexMap.cKeyValueBegin(); it != _handleToIndexMap.cKeyValueEnd(); ++it) {
+			const render::Resource* resource = reinterpret_cast<const render::Resource*>(&it.key);
+			switch (render::ResourceGetType(resource)) {
+			case render::ResourceType::SHADER:
+			{
+				const ShaderData& shaderData = _shaders.Get(it.value);
+				gl::program::Delete(shaderData.shader);
+				_shaderReflection.Remove(shaderData.reflectionIndex);
+				break;
+			}
+			case render::ResourceType::TEXTURE:
+			{
+				u32 index = _textures.Get(it.value);
+				gl::texture::Delete(index); 
+				break;
+			}				
+			case render::ResourceType::VERTEX_BUFFER:
+			{
+				u32 index = _vertexBuffers.Get(it.value);
+				gl::vertex::DeleteBuffers(&index, 1);
+				break;
+			}
+			case render::ResourceType::VERTEX_DESCRIPTION:
+			{
+				u32 index = _vertexDescriptions.Get(it.value);
+				gl::vertex::DeleteArrayObjects(&index, 1);
+				break;
+			}
+			case render::ResourceType::INDEX_BUFFER: 
+			{
+				u32 index = _indexBuffers.Get(it.value);
+				gl::vertex::DeleteBuffers(&index, 1);
+				break;
+			}
+			default: ASSERT(false); break;
+			}
 		}
-
-		for (auto& value : _textures)
-			gl::texture::Delete(value);
-
-		for (auto& value : _vertexDescriptions)
-			gl::vertex::DeleteArrayObjects(&value, 1);
-
-		for (auto& value : _vertexBuffers)
-			gl::vertex::DeleteBuffers(&value, 1);
-
-		for (auto& value : _indexBuffers)
-			gl::vertex::DeleteBuffers(&value, 1);
 	}
 
 	//---------------------------------------------------------------------------
@@ -88,11 +104,11 @@ namespace gl {
 		_hashFunction = hashFunction;
 		_shaderReflection.Init(_resourcesAllocator, 1024);
 
-		_shaders.Init(resourcesAllocator);
-		_textures.Init(resourcesAllocator);
-		_vertexDescriptions.Init(resourcesAllocator);
-		_vertexBuffers.Init(resourcesAllocator);
-		_indexBuffers.Init(resourcesAllocator);
+		_shaders.Init(resourcesAllocator, 128);
+		_textures.Init(resourcesAllocator, 128);
+		_vertexDescriptions.Init(resourcesAllocator, 128);
+		_vertexBuffers.Init(resourcesAllocator, 128);
+		_indexBuffers.Init(resourcesAllocator, 128);
 	}
 
 	//---------------------------------------------------------------------------
@@ -117,9 +133,8 @@ namespace gl {
 			_bufferSize += commandsSize;
 		}
 
-		// @TODO
-		// SORT COMMANDS!!!!
-		// MAYBE render pipeline will do this
+		// @TODO ^^
+		// Who should sort and instance commands, render device or engine pipeline
 
 		render::CommandProxy* proxy = reinterpret_cast<render::CommandProxy*>(_commandBuffer);
 		render::CommandProxy* proxyEnd = proxy + _bufferSize / sizeof(render::CommandProxy);
@@ -140,7 +155,7 @@ namespace gl {
 				const render::AllocationCommand* command = static_cast<const render::AllocationCommand*>(commandHeader);
 				const render::Resource* resource = &command->resource;
 
-				switch (resource->resourceType) {
+				switch (render::ResourceGetType(resource)) {
 				case render::ResourceType::SHADER: AllocateShader(static_cast<const render::Shader*>(resource)); break;
 				case render::ResourceType::TEXTURE:	AllocateTexture(static_cast<const render::Texture*>(resource));	break;
 				case render::ResourceType::VERTEX_BUFFER: AllocateVertexBuffer(static_cast<const render::VertexBuffer*>(resource)); break;
@@ -153,7 +168,7 @@ namespace gl {
 				const render::DeallocationCommand* command = static_cast<const render::DeallocationCommand*>(commandHeader);
 				const render::Resource* resource = &command->resource;
 
-				switch (resource->resourceType) {
+				switch (render::ResourceGetType(resource)) {
 				case render::ResourceType::SHADER: DeallocateShader(resource); break;
 				case render::ResourceType::TEXTURE:	DeallocateTexture(resource); break;
 				case render::ResourceType::VERTEX_BUFFER: DeallocateVertexBuffer(resource); break;
@@ -208,15 +223,16 @@ namespace gl {
 		ASSERT((char*) resourceEnd <= (char*) jobPackage + jobPackage->size);
 
 		const render::Resource* shaderResource = &jobPackage->shader;
-		ASSERT(shaderResource->resourceType == render::ResourceType::SHADER);
+		ASSERT(render::ResourceGetType(shaderResource) == render::ResourceType::SHADER);
 
+		const u32* index = _handleToIndexMap.Find(shaderResource->handle);
+		ASSERT(index);
 
-		ShaderData* shaderData = _shaders.Find(shaderResource->handle);
-		ASSERT(shaderData);
-		gl::program::Use(shaderData->shader);
+		ShaderData& shaderData = _shaders.Get(*index);
+		gl::program::Use(shaderData.shader);
 
 		ProcessJobPackageResources(resource, resourceEnd);
-		ProcessJobPackageUniforms(uniforms, jobPackage->uniformsCount, shaderData->reflectionIndex);
+		ProcessJobPackageUniforms(uniforms, jobPackage->uniformsCount, shaderData.reflectionIndex);
 		ProcessJobPackageBatch(&jobPackage->batch);
 		gl::vertex::UnbindArrayObject();
 	}
@@ -228,7 +244,7 @@ namespace gl {
 		// OpenGL specific find VAO first!
 		const render::Resource* vertexDescription = nullptr;
 		for (const render::Resource* resource = resourceBegin; resource < resourceEnd; ++resource) {
-			if (resource->resourceType == render::ResourceType::VERTEX_DESCRIPTION) {
+			if (render::ResourceGetType(resource) == render::ResourceType::VERTEX_DESCRIPTION) {
 				vertexDescription = resource;
 				break;
 			}
@@ -250,37 +266,36 @@ namespace gl {
 	}
 
 	void GLRenderDevice::ProcessJobPackageResource(const render::Resource* resource, u32& inOutTextureCount) {
-		switch (resource->resourceType) {
+		const u32* index = _handleToIndexMap.Find(resource->handle);
+		ASSERT(index);
+		
+		switch (render::ResourceGetType(resource)) {
 		case render::ResourceType::SHADER: 
 			ASSERT(false); 
 			break;
 		case render::ResourceType::TEXTURE:
 		{
-			u32* texture = _textures.Find(resource->handle);
-			ASSERT(texture);
+			u32 texture = _textures.Get(*index);
 			gl::texture::SetActiveTexture(inOutTextureCount++); // @TODO find out if seting every frame is ok
-			gl::texture::Bind(*texture);
+			gl::texture::Bind(texture);
 			break;
 		}
 		case render::ResourceType::VERTEX_BUFFER:
 		{
-			u32* vb = _vertexBuffers.Find(resource->handle);
-			ASSERT(vb);
-			gl::vertex::BindArrayBuffer(*vb);
+			u32 vb = _vertexBuffers.Get(*index);
+			gl::vertex::BindArrayBuffer(vb);
 			break;
 		}
 		case render::ResourceType::VERTEX_DESCRIPTION:
 		{
-			u32* vb = _vertexDescriptions.Find(resource->handle);
-			ASSERT(vb);
-			gl::vertex::BindArrayObject(*vb);
+			u32 vb = _vertexDescriptions.Get(*index);
+			gl::vertex::BindArrayObject(vb);
 			break;
 		}
 		case render::ResourceType::INDEX_BUFFER:
 		{
-			u32* ib = _indexBuffers.Find(resource->handle);
-			ASSERT(ib);
-			gl::vertex::BindIndexArrayBuffer(*ib);
+			u32 ib = _indexBuffers.Get(*index);
+			gl::vertex::BindIndexArrayBuffer(ib);
 			break;
 		}
 		default: ASSERT(false); break;
@@ -309,31 +324,31 @@ namespace gl {
 
 		switch (uniform->type) {
 		case render::UniformType::FLOAT:
-			gl::uniform::Set1f(uniform->location, ((render::FloatUniform*) header)->value);
+			gl::uniform::Set1f(uniform->location, reinterpret_cast<const render::FloatUniform*>(header)->value);
 			result += sizeof(render::FloatUniform);
 			break;
 		case render::UniformType::INT:
-			gl::uniform::Set1i(uniform->location, ((render::IntUniform*) header)->value);
+			gl::uniform::Set1i(uniform->location, reinterpret_cast<const render::IntUniform*>(header)->value);
 			result += sizeof(render::IntUniform);
 			break;
 		case render::UniformType::VECTOR2:
-			gl::uniform::Set2f(uniform->location, ((render::Vector2Uniform*) header)->values);
+			gl::uniform::Set2f(uniform->location, reinterpret_cast<const render::Vector2Uniform*>(header)->values);
 			result += sizeof(render::Vector2Uniform);
 			break;
 		case render::UniformType::VECTOR3:
-			gl::uniform::Set3f(uniform->location, ((render::Vector3Uniform*) header)->values);
+			gl::uniform::Set3f(uniform->location, reinterpret_cast<const render::Vector3Uniform*>(header)->values);
 			result += sizeof(render::Vector3Uniform);
 			break;
 		case render::UniformType::MATRIX:
-			gl::uniform::SetMatrix4f(uniform->location, ((render::MatrixUniform*) header)->values);
+			gl::uniform::SetMatrix4f(uniform->location, reinterpret_cast<const render::MatrixUniform*>(header)->values);
 			result += sizeof(render::MatrixUniform);
 			break;
 		case render::UniformType::SAMPLER2D:
 		{
-			u32* glID = _textures.Find(((render::Sampler2DUniform*) header)->handle);
-			ASSERT(glID);
+			u32* index = _handleToIndexMap.Find(reinterpret_cast<const render::Sampler2DUniform*>(header)->handle);
+			u32 glID = _textures.Get(*index);
 			gl::texture::SetActiveTexture(0); // @TODO find out if seting every frame is ok
-			gl::texture::Bind(*glID);
+			gl::texture::Bind(glID);
 			result += sizeof(render::Sampler2DUniform);
 			break;
 		}
@@ -401,7 +416,7 @@ namespace gl {
 
 	//---------------------------------------------------------------------------
 	void GLRenderDevice::AllocateShader(const render::Shader* shader) {
-		ASSERT(!_shaders.Find(shader->handle));
+		ASSERT(!_handleToIndexMap.Find(shader->handle));
 
 		u32 vs = gl::util::CompileVertexShader(shader->vertexStage.data);
 		u32 fs = gl::util::CompileFragmentShader(shader->fragmentStage.data);
@@ -417,7 +432,9 @@ namespace gl {
 		shaderData.shader = program;
 		shaderData.reflectionIndex = _shaderReflection.Add(core::move(reflection));
 
-		_shaders.Add(shader->handle, shaderData);
+		u32 index = _shaders.Add(shaderData);
+		_handleToIndexMap.Add(shader->handle, index);
+		
 
 		// @TODO FIX this
 
@@ -439,7 +456,7 @@ namespace gl {
 
 	//---------------------------------------------------------------------------
 	void GLRenderDevice::AllocateTexture(const render::Texture* texture) {
-		ASSERT(!_textures.Find(texture->handle));
+		ASSERT(!_handleToIndexMap.Find(texture->handle));
 
 		u32 glID = gl::texture::Create();
 		gl::texture::Bind(glID);
@@ -448,12 +465,13 @@ namespace gl {
 		gl::texture::SetData(texture->data, texture->width, texture->height, texture->mipmaps, texture->format);
 		gl::texture::Unbind();
 
-		_textures.Add(texture->handle, glID);
+		u32 index = _textures.Add(glID);
+		_handleToIndexMap.Add(texture->handle, index);
 	}
 
 	//---------------------------------------------------------------------------
 	void GLRenderDevice::AllocateVertexBuffer(const render::VertexBuffer* vb) {
-		ASSERT(!_vertexBuffers.Find(vb->handle));
+		ASSERT(!_handleToIndexMap.Find(vb->handle));
 
 		u32 glID;
 		gl::vertex::CreateBuffers(1, &glID);
@@ -466,39 +484,39 @@ namespace gl {
 			gl::vertex::ArrayBufferDynamicData(vb->data, vb->dataSize);
 		}
 
-		_vertexBuffers.Add(vb->handle, glID);
+		u32 index = _vertexBuffers.Add(glID);
+		_handleToIndexMap.Add(vb->handle, index);
 
 		gl::vertex::UnbindArrayBuffer();
 	}
 
 	//---------------------------------------------------------------------------
 	void GLRenderDevice::AllocateVertexDescription(const render::VertexDescription* vbd) {
-		ASSERT(!_vertexDescriptions.Find(vbd->handle));
-
+		ASSERT(!_handleToIndexMap.Find(vbd->handle));
 		// @TODO? current requirement: everything mentioned by vbd has to be already in GPU -> maybe rework
 
 		u32 glID;
 		gl::vertex::CreateArrayObjects(1, &glID);
 		gl::vertex::BindArrayObject(glID);
 
-		u32 ibh = vbd->indexBufferHandle;
-		u32* pIbID = nullptr;
-		if (ibh != U32MAX) {
-			pIbID = _indexBuffers.Find(ibh);
-			ASSERT(pIbID);
-			gl::vertex::BindIndexArrayBuffer(*pIbID);
+		u64 ibh = vbd->indexBufferHandle;
+		if (vbd->hasIndexBuffer) {
+			u32* index = _handleToIndexMap.Find(vbd->handle);
+			u32 ibID = _indexBuffers.Get(*index);
+			gl::vertex::BindIndexArrayBuffer(ibID);
 		}
 
-		u32 lastVbh = U32MAX;
+		u64 lastVbh = U64MAX;
 		u32 vbID;
 		for (u32 i = 0; i < vbd->attributesCount; ++i) {
 			const render::VertexAttribute* attribute = &vbd->attributes[i];
 
-			u32 vbh = attribute->vertexBufferHandle;
+			u64 vbh = attribute->vertexBufferHandle;
 			if (vbh != lastVbh) {
-				u32* pVbID = _vertexBuffers.Find(vbh);
-				ASSERT(pVbID);
-				vbID = *pVbID;
+				u32* index = _handleToIndexMap.Find(vbd->handle);
+				u32 newVbID = _vertexBuffers.Get(*index);
+
+				vbID = newVbID;
 				gl::vertex::BindArrayBuffer(vbID);
 			}
 
@@ -533,12 +551,14 @@ namespace gl {
 		//gl::vertex::UnbindIndexBuffer();
 		//gl::vertex::UnbindArrayBuffer();
 		gl::vertex::UnbindArrayObject();
-		_vertexDescriptions.Add(vbd->handle, glID);
+		
+		u32 index = _vertexDescriptions.Add(glID);
+		_handleToIndexMap.Add(vbd->handle, index);
 	}
 
 	//---------------------------------------------------------------------------
 	void GLRenderDevice::AllocateIndexBuffer(const render::IndexBuffer* ib) {
-		ASSERT(!_indexBuffers.Find(ib->handle));
+		ASSERT(!_handleToIndexMap.Find(ib->handle));
 
 		u32 glID;
 		gl::vertex::CreateBuffers(1, &glID);
@@ -551,65 +571,81 @@ namespace gl {
 			gl::vertex::IndexArrayBufferDynamicData(ib->data, ib->dataSize);
 		}
 
-		_indexBuffers.Add(ib->handle, glID);
+		u32 index = _indexBuffers.Add(glID);
+		_handleToIndexMap.Add(ib->handle, index);
 
 		gl::vertex::UnbindIndexBuffer();
 	}
 
 	//---------------------------------------------------------------------------
 	void GLRenderDevice::DeallocateShader(const render::Resource* shader) {
-		ShaderData* shaderData = _shaders.Find(shader->handle);
-		ASSERT(shaderData);
+		u32* index = _handleToIndexMap.Find(shader->handle);
+		ASSERT(index);
 
-		if (shaderData) {
-			_shaderReflection.Remove(shaderData->reflectionIndex);
+		if (index) {
+			ShaderData& shaderData = _shaders.Get(*index);
+			_shaderReflection.Remove(shaderData.reflectionIndex);
 
-			gl::program::Delete(shaderData->shader);
-			_shaders.Remove(shader->handle);
+			gl::program::Delete(shaderData.shader);
+
+			_handleToIndexMap.Remove(shader->handle);
+			_shaders.Remove(*index);
 		}
 	}
 
 	//---------------------------------------------------------------------------
 	void GLRenderDevice::DeallocateTexture(const render::Resource* texture) {
-		u32* glID = _textures.Find(texture->handle);
-		ASSERT(glID);
+		u32* index = _handleToIndexMap.Find(texture->handle);
+		ASSERT(index);
 
-		if (glID) {
-			gl::texture::Delete(*glID);
-			_textures.Remove(texture->handle);
+		if (index) {
+			u32 glID = _textures.Get(*index);
+			gl::program::Delete(glID);
+
+			_handleToIndexMap.Remove(texture->handle);
+			_textures.Remove(*index);
 		}
 	}
 
 	//---------------------------------------------------------------------------
 	void GLRenderDevice::DeallocateVertexBuffer(const render::Resource* vb) {
-		u32* glID = _vertexBuffers.Find(vb->handle);
-		ASSERT(glID);
+		u32* index = _handleToIndexMap.Find(vb->handle);
+		ASSERT(index);
 
-		if (glID) {
-			gl::vertex::DeleteBuffers(glID, 1);
-			_vertexBuffers.Remove(vb->handle);
+		if (index) {
+			u32 glID = _vertexBuffers.Get(*index);
+			gl::vertex::DeleteBuffers(&glID, 1);
+
+			_handleToIndexMap.Remove(vb->handle);
+			_vertexBuffers.Remove(*index);
 		}
 	}
 
 	//---------------------------------------------------------------------------
 	void GLRenderDevice::DeallocateVertexInformation(const render::Resource* vbi) {
-		u32* glID = _vertexDescriptions.Find(vbi->handle);
-		ASSERT(glID);
+		u32* index = _handleToIndexMap.Find(vbi->handle);
+		ASSERT(index);
 
-		if (glID) {
-			gl::vertex::DeleteArrayObjects(glID, 1);
-			_vertexDescriptions.Remove(vbi->handle);
+		if (index) {
+			u32 glID = _vertexDescriptions.Get(*index);
+			gl::vertex::DeleteArrayObjects(&glID, 1);
+
+			_handleToIndexMap.Remove(vbi->handle);
+			_vertexDescriptions.Remove(*index);
 		}
 	}
 
 	//---------------------------------------------------------------------------
 	void GLRenderDevice::DeallocateIndexBuffer(const render::Resource* ib) {
-		u32* glID = _indexBuffers.Find(ib->handle);
-		ASSERT(glID);
+		u32* index = _handleToIndexMap.Find(ib->handle);
+		ASSERT(index);
 
-		if (glID) {
-			gl::vertex::DeleteBuffers(glID, 1);
-			_indexBuffers.Remove(ib->handle);
+		if (index) {
+			u32 glID = _indexBuffers.Get(*index);
+			gl::vertex::DeleteBuffers(&glID, 1);
+
+			_handleToIndexMap.Remove(ib->handle);
+			_indexBuffers.Remove(*index);
 		}
 	}
 }

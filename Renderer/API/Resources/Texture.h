@@ -36,6 +36,6 @@ namespace render {
 		u32 width;
 		u32 height;
 
-		char* data;
+		void* data;
 	};
 }

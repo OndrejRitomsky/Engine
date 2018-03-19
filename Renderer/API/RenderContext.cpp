@@ -1,7 +1,7 @@
 #include "RenderContext.h"
 
 #include <Core/Allocator/IAllocator.h>
-#include <Core/Utility.h>
+#include <Core/Collection/Array.inl>
 
 #include "Renderer/API/Command/JobPackage.h"
 
@@ -14,15 +14,15 @@ namespace render {
 
 	//-------------------------------------------------------------------------
 	RenderContext::RenderContext() :
-		_commandsSize(0),
 		_contextStream(nullptr),
 		_isRecordingStateCommand(false) {
 
 	}
 
 	//-------------------------------------------------------------------------
-	void RenderContext::Init(RenderContextStream* contextStream) {
+	void RenderContext::Init(RenderContextStream* contextStream, core::IAllocator* allocator) {
 		_contextStream = contextStream;
+		_commands.Init(allocator);
 	}
 
 	//-------------------------------------------------------------------------
@@ -75,15 +75,13 @@ namespace render {
 
 	//-------------------------------------------------------------------------
 	char* RenderContext::AddCommandAndReserve(u64 size, SortKey sortKey) {
-		ASSERT(_commandsSize < MAX_COMMANDS);
-		if (_commandsSize >= MAX_COMMANDS)
-			return nullptr;
 
 		char* streamData = _contextStream->ReserveSize(size);
 		if (streamData) {
-			_commands[_commandsSize].sortKey = sortKey;
-			_commands[_commandsSize].data = streamData;
-			++_commandsSize;
+			CommandProxy proxy;
+			proxy.sortKey = sortKey;
+			proxy.data = streamData;
+			_commands.Push(proxy);
 		}
 
 		return streamData;
@@ -91,7 +89,7 @@ namespace render {
 
 	//-------------------------------------------------------------------------
 	const CommandProxy* RenderContext::GetCommands(u32& outCount) const {
-		outCount = _commandsSize;
-		return _commands;
+		outCount = _commands.Count();
+		return _commands.cbegin();
 	}
 }

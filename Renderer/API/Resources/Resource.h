@@ -12,9 +12,9 @@ namespace render {
 	};
 
 	struct Resource {
-		ResourceType resourceType;
-		u32  handle;
+		u64 handle; // :8 :32
 	};
+
 
 	static inline void InitResource(Resource* resource, u32 handle, ResourceType type);
 
@@ -22,8 +22,13 @@ namespace render {
 
 	//---------------------------------------------------------------------------
 	static inline void InitResource(Resource* resource, u32 handle, ResourceType type) {
-		resource->handle = handle;
-		resource->resourceType = type;
+		u64 t = static_cast<u64>(type);
+		resource->handle = t << 32 | handle;
+	}
+
+	//---------------------------------------------------------------------------
+	static inline ResourceType ResourceGetType(const Resource* resource) {
+		return static_cast<ResourceType>(resource->handle >> 32);
 	}
 };
 

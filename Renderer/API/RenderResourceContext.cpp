@@ -76,7 +76,7 @@ namespace render {
 	void RenderResourceContext::Allocate(RenderContextStream* contextStream, Resource* resource) {
 		ASSERT(!_buffer);
 
-		switch (resource->resourceType) {
+		switch (ResourceGetType(resource)) {
 		case ResourceType::SHADER: _buffer = AllocateShader(contextStream, resource); break;
 		case ResourceType::TEXTURE: _buffer = AllocateTexture(contextStream, resource); break;
 		case ResourceType::VERTEX_BUFFER: _buffer = AllocateVertexBuffer(contextStream, resource); break;
@@ -92,7 +92,7 @@ namespace render {
 	void RenderResourceContext::Deallocate(RenderContextStream* contextStream, Resource* resource) {
 		ASSERT(!_buffer);
 
-		switch (resource->resourceType) {
+		switch (ResourceGetType(resource)) {
 		case ResourceType::SHADER:
 		case ResourceType::TEXTURE:
 		case ResourceType::VERTEX_BUFFER:

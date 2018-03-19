@@ -201,19 +201,19 @@
 			}
 
 			//-----------------------------------------------------------------------
-			void Set2f(u32 location, f32 values[2]) {
+			void Set2f(u32 location, const f32 values[2]) {
 				glUniform2f(location, values[0], values[1]);
 				GLAssert();
 			}
 
 			//-----------------------------------------------------------------------
-			void Set3f(u32 location, f32 values[3]) {
+			void Set3f(u32 location, const f32 values[3]) {
 				glUniform3f(location, values[0], values[1], values[2]);
 				GLAssert();
 			}
 
 			//-----------------------------------------------------------------------
-			void SetMatrix4f(u32 location, f32 values[16]) {
+			void SetMatrix4f(u32 location, const f32 values[16]) {
 				glUniformMatrix4fv(location, 1, GL_FALSE, values);
 				GLAssert();
 			}
@@ -252,7 +252,7 @@
 			}
 
 			//-----------------------------------------------------------------------
-			void SetData(const char* data, u32 width, u32 height, bool generateMipMaps, render::TextureFormat format) {
+			void SetData(const void* data, u32 width, u32 height, bool generateMipMaps, render::TextureFormat format) {
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 				GLAssert();
 				if (generateMipMaps)

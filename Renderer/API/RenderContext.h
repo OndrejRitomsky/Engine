@@ -1,10 +1,14 @@
 #pragma once
 
 #include <Core/Types.h>
+#include <Core/Collection/Array.h>
 
 #include "Renderer/API/Command/CommandParameters.h"
 #include "Renderer/API/Command/CommandProxy.h"
 
+namespace core {
+	class IAllocator;
+}
 
 namespace render {
 	struct JobPackage;
@@ -15,13 +19,10 @@ namespace render {
 
 	class RenderContext {
 	public:
-		static const u32 MAX_COMMANDS = 16;
-
-	public:
 		RenderContext();
 		~RenderContext() = default;
 
-		void Init(RenderContextStream* contextStream);
+		void Init(RenderContextStream* contextStream, core::IAllocator* allocator);
 
 		void BeginStateCommands(SortKey sortKey);
 		void AddClearCommand(ClearFlags clearFlags);
@@ -38,12 +39,10 @@ namespace render {
 
 	private:
 		bool _isRecordingStateCommand;
-		u32 _commandsSize;
 
 		u64 _stateCommandSortKey;
 
-		CommandProxy _commands[MAX_COMMANDS]; // @REWORK this could be dynamic array, but with proper allocator
-
+		core::Array<CommandProxy> _commands;
 		RenderContextStream* _contextStream;
 	};
 }

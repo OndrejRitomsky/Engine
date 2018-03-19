@@ -25,15 +25,14 @@ namespace render {
 
 namespace gl {
 
+	// @TODO initialisation is stil not done (as SDL2 is still used)
+
 	struct ShaderReflection;
 	struct ShaderData;
 
 	// Used for hashing uniformnames
 	using HashFunction = core::Hash(*)(const void* key, u32 length);
 
-	// @TODO allocations!!!
-	// @TODO allocations!!!
-	// @TODO allocations!!!
 	class GLRenderDevice : public render::IRenderDevice {
 	public:
 		GLRenderDevice();
@@ -79,11 +78,15 @@ namespace gl {
 
 		core::LookupArray<ShaderReflection> _shaderReflection;
 
-		core::HashMap<ShaderData> _shaders;
-		core::HashMap<u32> _textures;
-		core::HashMap<u32> _vertexDescriptions;
-		core::HashMap<u32> _vertexBuffers;
-		core::HashMap<u32> _indexBuffers;
+		core::LookupArray<ShaderData> _shaders;
+		core::LookupArray<u32> _textures;
+		core::LookupArray<u32> _vertexDescriptions;
+		core::LookupArray<u32> _vertexBuffers;
+		core::LookupArray<u32> _indexBuffers;
+
+		// @TODO ? Not liking this extra indirection
+		// (Engine is creating handles, but maybe render device should (but how to give them back safely))
+		core::HashMap<u32> _handleToIndexMap;
 	};
 }
 

@@ -27,22 +27,24 @@ namespace render {
 		bool normalize;
 		VertexAttributeType type;
 
-		u32 vertexBufferHandle; // from which buffer this attribute comes
 		u32 index;
 		u32 offset;
 		u32 stride;
 		u32 divisor;
+
+		u64 vertexBufferHandle; // from which buffer this attribute comes
 	};
 	
 	// Vertex buffers referenced, have to be already created!!! // @TODO ??
 	// @TODO what name directX uses for attributes (to have common name for opengl/directx ...)
 	struct VertexDescription : Resource {
 		static const u32 MAX_ATTRIBUTES = 8;
+		bool hasIndexBuffer;
 
 		VertexAttribute attributes[MAX_ATTRIBUTES];
-		
+
 		u32 attributesCount;
-		u32 indexBufferHandle;
+		u64 indexBufferHandle;
 	};
 
 	struct IndexBuffer : Resource {

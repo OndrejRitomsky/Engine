@@ -41,9 +41,9 @@ namespace gl {
 		void Info(u32 program, u32 index, char* name, i32 nameSize, i32& outNameSize, i32& outArraySize, u32& outGLType);
 
 		void Set1f(u32 location, f32 value);
-		void Set2f(u32 location, f32 values[2]);
-		void Set3f(u32 location, f32 values[3]);
-		void SetMatrix4f(u32 location, f32 values[16]);
+		void Set2f(u32 location, const f32 values[2]);
+		void Set3f(u32 location, const f32 values[3]);
+		void SetMatrix4f(u32 location, const f32 values[16]);
 		void Set1i(u32 location, i32 value);
 	}
 
@@ -56,7 +56,7 @@ namespace gl {
 
 		void Delete(u32 texture);
 
-		void SetData(const char* data, u32 width, u32 height, bool generateMipMaps, render::TextureFormat format);
+		void SetData(const void* data, u32 width, u32 height, bool generateMipMaps, render::TextureFormat format);
 
 		void SetActiveTexture(u32 offset);
 		void Bind(u32 texture);
