@@ -13,20 +13,20 @@ namespace hashMap_tests {
 	void ConstructorSizeTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HashMap<int> map;
-		map.Init(&allocator);
+		map.Init(allocator.Allocator());
 
 		TestEqual(testGroup, map.Count(), 0, "Size should be 0 after construction");
 	}
 
 	//---------------------------------------------------------------------------
 	void AddTest1(test::TestGroup& testGroup) {
-		core::HeapAllocator allocator;	
+		core::HeapAllocator allocator;
 		core::HashMap<int> map;
-		map.Init(&allocator);
+		map.Init(allocator.Allocator());
 
 		int a = 32;
 		map.Add(core::ToHash(&a, sizeof(int)), a);
-		
+
 		int b = 33;
 		map.Add(core::ToHash(&b, sizeof(int)), b);
 
@@ -38,15 +38,15 @@ namespace hashMap_tests {
 	void FindTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HashMap<int> map;
-		map.Init(&allocator);
+		map.Init(allocator.Allocator());
 
 		int e = 32;
-		core::Hash hash = core::ToHash(&e, sizeof(int));
+		h64 hash = core::ToHash(&e, sizeof(int));
 		map.Add(hash, e);
 
 
 		int* element = map.Find(hash);
-		
+
 		TestEqual(testGroup, *element, e, "Find should return pointer to the same value as was added in");
 	}
 
@@ -54,27 +54,27 @@ namespace hashMap_tests {
 	void FindTest2(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HashMap<int> map;
-		map.Init(&allocator);
+		map.Init(allocator.Allocator());
 
 		int a = 99;
-		core::Hash hash = core::ToHash(&a, sizeof(int));
+		h64 hash = core::ToHash(&a, sizeof(int));
 
-		
+
 		int* element = map.Find(hash);
 
 		TestEqual(testGroup, element, nullptr, "Find should return nullptr, element is not inside");
 	}
-	
+
 	//---------------------------------------------------------------------------
 	void RemoveTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HashMap<int> map;
-		map.Init(&allocator);
+		map.Init(allocator.Allocator());
 
 		int a = 99;
-		core::Hash hash = core::ToHash(&a, sizeof(int));
+		h64 hash = core::ToHash(&a, sizeof(int));
 		map.Add(hash, a);
-		map.Remove(hash);
+		map.SwapRemove(hash);
 
 		TestEqual(testGroup, map.Count(), 0, "Size should match amount of inserted elements");
 	}
@@ -83,11 +83,11 @@ namespace hashMap_tests {
 	void RemoveTest2(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HashMap<int> map;
-		map.Init(&allocator);
+		map.Init(allocator.Allocator());
 
 		int a = 99;
-		core::Hash hash = core::ToHash(&a, sizeof(int));
-		map.Remove(hash);
+		h64 hash = core::ToHash(&a, sizeof(int));
+		map.SwapRemove(hash);
 
 		TestEqual(testGroup, map.Count(), 0, "Size should match amount of inserted elements");
 	}
@@ -96,53 +96,53 @@ namespace hashMap_tests {
 	void Iterator(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HashMap<int> map;
-		map.Init(&allocator);
+		map.Init(allocator.Allocator());
 		for (int i = 0; i < 8; ++i) {
-			core::Hash hash = core::ToHash(&i, sizeof(int));
+			h64 hash = core::ToHash(&i, sizeof(int));
 			map.Add(hash, i);
 		}
 
 		long long int dis = map.end() - map.begin();
 		TestEqual(testGroup, map.Count(), dis, "Begin end distance should be same as size");
-  }
+	}
 
 	//---------------------------------------------------------------------------
 	void ConstIterator(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HashMap<int> map;
-		map.Init(&allocator);
+		map.Init(allocator.Allocator());
 		for (int i = 0; i < 11; ++i) {
-			core::Hash hash = core::ToHash(&i, sizeof(int));
+			h64 hash = core::ToHash(&i, sizeof(int));
 			map.Add(hash, i);
 		}
 
-		long long int dis = map.cend() - map.cbegin();
+		long long int dis = map.end() - map.begin();
 		TestEqual(testGroup, map.Count(), dis, "Cbegin cend distance should be same as size");
 	}
 
-  //---------------------------------------------------------------------------
-  void ConstKeyValueIterator(test::TestGroup& testGroup) {
-    core::HeapAllocator allocator;
-    core::HashMap<int> map;
-    map.Init(&allocator);
+	//---------------------------------------------------------------------------
+	void ConstKeyValueIterator(test::TestGroup& testGroup) {
+		core::HeapAllocator allocator;
+		core::HashMap<int> map;
+		map.Init(allocator.Allocator());
 
-    const int n = 2;
-    int values[n];
-    core::Hash hashes[n];
+		const int n = 2;
+		int values[n];
+		h64 hashes[n];
 
-    for (int i = 0; i < n; ++i) {
-      core::Hash hash = core::ToHash(&i, sizeof(int));
-      map.Add(hash, i);
-      values[i] = i;
-      hashes[i] = hash;
-    }
+		for (int i = 0; i < n; ++i) {
+			h64 hash = core::ToHash(&i, sizeof(int));
+			map.Add(hash, i);
+			values[i] = i;
+			hashes[i] = hash;
+		}
 
-    int i = 0;
-    for (auto& it = map.cKeyValueBegin(); it != map.cKeyValueEnd(); ++it, i++) {
-      TestEqual(testGroup, it.key, hashes[i], "KeyValue iterator key equality");
-      TestEqual(testGroup, it.value, values[i], "KeyValue iterator value equality");
-    }
-  }
+		auto it = map.CIterator();
+		for (unsigned i = 0; i < it.count; ++i) {
+				TestEqual(testGroup, it.keys[i], hashes[i], "KeyValue iterator key equality");
+				TestEqual(testGroup, it.values[i], values[i], "KeyValue iterator value equality");
+			}
+	}
 
 
 
@@ -155,10 +155,10 @@ namespace hashMap_tests {
 
 		core::HeapAllocator allocator;
 		core::HashMap<Str> map;
-		map.Init(&allocator);
+		map.Init(allocator.Allocator());
 
 		const int N = 10;
-		core::Hash hashes[N];
+		h64 hashes[N];
 		bool containsCheck[N];
 
 
@@ -173,7 +173,7 @@ namespace hashMap_tests {
 		int removeIndexes[R] = {1,7};
 		for (int i = 0; i < R; ++i) {
 			containsCheck[removeIndexes[i]] = false;
-			map.Remove(hashes[removeIndexes[i]]);
+			map.SwapRemove(hashes[removeIndexes[i]]);
 		}
 
 		bool contains[N];
@@ -193,10 +193,10 @@ namespace hashMap_tests {
 
 		core::HeapAllocator allocator;
 		core::HashMap<Str> map;
-		map.Init(&allocator);
+		map.Init(allocator.Allocator());
 
 		const int N = 40;
-		core::Hash hashes[N];
+		h64 hashes[N];
 		bool containsCheck[N];
 
 		for (int i = 0; i < N; ++i) {
@@ -210,7 +210,7 @@ namespace hashMap_tests {
 		int removeIndexes[R] = {4,14,32,38};
 		for (int i = 0; i < R; ++i) {
 			containsCheck[removeIndexes[i]] = false;
-			map.Remove(hashes[removeIndexes[i]]);
+			map.SwapRemove(hashes[removeIndexes[i]]);
 		}
 
 		bool contains[N];

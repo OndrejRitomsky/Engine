@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Core/Types.h"
+#include "Core/Common/Types.h"
+#include "Core/Common/TypeLimits.h"
 
 namespace core {
 

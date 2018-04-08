@@ -1,7 +1,7 @@
 #include "RenderContextStream.h"
 
-#include <Core/Utility.h>
-#include <Core/CoreAssert.h>
+#include <Core/Common/Utility.h>
+#include <Core/Common/Assert.h>
 #include <Core/Allocator/IAllocator.h>
 #include <Core/Allocator/IAllocator.inl>
 #include <Core/TagAllocator/SingleTagProxyAllocator.h>
@@ -37,7 +37,7 @@ namespace render {
 	bool RenderContextStream::Reserve(u64 size) {
 		if (size > _bufferCapacity - _bufferSize) {
 			// @TODO ?? This will throw away the rest of the current buffer, might need less wasteful solution
-			_buffer = (char*) _allocator->Allocate(core::Max(size, _bufferCapacity), sizeof(u64), _bufferCapacity);
+			_buffer = (char*) _allocator->Allocate(core::Max(size, _bufferCapacity), sizeof(u64), &_bufferCapacity);
 			if (!_buffer) {
 				_bufferCapacity = 0;
 				return false;

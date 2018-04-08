@@ -1,7 +1,6 @@
 #pragma once
 
-#include <Core/Types.h>
-#include <Core/CoreTypes.h>
+#include <Core/Common/Types.h>
 
 namespace render {
 
@@ -18,7 +17,7 @@ namespace render {
 	//UniformType type; -> renderer has this information (at least now)
 
 	struct UniformHeader {
-		core::Hash nameHash;
+		h64 nameHash;
 	};
 
 	struct IntUniform : UniformHeader {

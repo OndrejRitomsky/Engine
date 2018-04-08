@@ -1,7 +1,8 @@
 #pragma once
 
-#include "Core/Utility.h"
-#include "Core/CoreAssert.h"
+#include "Core/Common/Utility.h"
+#include "Core/Common/Assert.h"
+#include "Core/Algorithm/Move.h"
 
 namespace core {
 

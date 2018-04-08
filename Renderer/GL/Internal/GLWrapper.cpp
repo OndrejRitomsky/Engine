@@ -2,7 +2,7 @@
 
 #include <Extern/Include/GL/glew.h>
 
-#include <Core/CoreAssert.h>
+#include <Core/Common/Assert.h>
 
 #include <stdio.h>
 

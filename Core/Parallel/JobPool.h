@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include "Core/Types.h"
+#include "Core/Common/Types.h"
 
 #include "Core/Parallel/Collection/ThreadSafeFixedQueue.h"
 #include "Core/Parallel/Locks/SpinLock.h"
@@ -9,6 +9,8 @@
 
 #include "Core/Collection/Function.h"
 
+
+	// @TODO need some kind of promises so it can be waited for specific JOB! or query result?
 
 	// ----------------------- USAGE -------------------------------------
 	// //core::JobPool pool;

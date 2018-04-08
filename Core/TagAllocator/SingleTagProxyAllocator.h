@@ -1,31 +1,34 @@
 #pragma once
 
-#include "Core/Types.h"
+#include "Core/Common/Types.h"
 
 #include "Core/Allocator/IAllocator.h"
-#include "Core/TagAllocator/AllocationTag.h"
+#include "Core/TagAllocator/MemTag.h"
 
 
 namespace core {
-	class SafeTaggedBlockAllocator;
+	class ITagAllocator;
 
-	class SingleTagProxyAllocator : public IAllocator
+	class SingleTagProxyAllocator
 	{
 	public:
-		SingleTagProxyAllocator(SafeTaggedBlockAllocator* backingAllocator, AllocationTag tag);
+		SingleTagProxyAllocator();
 		SingleTagProxyAllocator(const SingleTagProxyAllocator& oth) = delete;
 		SingleTagProxyAllocator& operator=(const SingleTagProxyAllocator& rhs) = delete;
 
-		~SingleTagProxyAllocator() override = default;
+		void Init(ITagAllocator* backingAllocator, MemTag tag);
 
-		void* Allocate(u64 size, u64 alignment, u64& outAllocatedSize);
+		~SingleTagProxyAllocator() = default;
 
-		void* Allocate(u64 size, u64 alignment) override;
-		void Deallocate(void* address) override;
+		void* Allocate(u64 size, u64 allignment, u64* outAllocated);
+		void Deallocate(void* address);
+		void Deinit();
 
 	private:
-		SafeTaggedBlockAllocator* _backingAllocator;
-		AllocationTag _tag;
+		IAllocator _interface;
+
+		ITagAllocator* _backingAllocator;
+		MemTag _tag;
 	};
 }
 

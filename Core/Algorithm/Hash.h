@@ -6,8 +6,8 @@
 
 // Edited
 
-#include "Core/Types.h"
-#include "Core/CoreTypes.h"
+#include "Core/Common/Types.h"
+
 
 namespace core
 {
@@ -27,8 +27,8 @@ namespace core
 	}*/
 
 	//---------------------------------------------------------------------------
-	inline Hash ToHash(const void* key, u32 length) {
-		static_assert(sizeof(Hash) == sizeof(u64), "Hash size must match");
-		return (Hash) MurmurHash64A(key, length, 314953llu);
+	inline h64 ToHash(const void* key, u32 length) {
+		static_assert(sizeof(h64) == sizeof(u64), "Hash size must match");
+		return (h64) MurmurHash64A(key, length, 314953llu);
 	}
 }

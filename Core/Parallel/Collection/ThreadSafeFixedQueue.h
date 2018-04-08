@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core/Types.h"
+#include "Core/Common/Types.h"
 #include "Core/Parallel/Locks/LockUtil.h"
 
 

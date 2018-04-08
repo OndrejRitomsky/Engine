@@ -1,17 +1,21 @@
 #include "SafeTaggedBlockAllocator.h"
 
-#include "Core/CoreAssert.h"
+#include "Core/Common/Assert.h"
 #include "Core/Allocator/IAllocator.h"
 #include "Core/Allocator/IAllocator.inl"
 
-#include "Core/Memory/Pointer.h"
+#include "Core/Common/Pointer.h"
+#include "Core/Algorithm/Memory.h"
+#include "Core/Common/TypeLimits.h"
 
 namespace core {
 	static const u64 INVALID_INDEX = U64MAX;
 	static const u64 DEFAULT_ALIGNMENT = 8;
 	
+	// @TODO move bit array stuff to separate, base struct
+
 	struct SafeTaggedBlockAllocator::BlockMeta {
-		AllocationTag tag;
+		MemTag tag;
 		void* block;
 	};
 
@@ -53,7 +57,8 @@ namespace core {
 		_freeFirst(INVALID_INDEX),
 		_blockSize(0),
 		_blockAlignment(0),
-		_invalidTag(0) {
+		_invalidTag(0),
+		_interface{0} {
 
 		_data.size = 0;
 		_data.capacity = 0;
@@ -68,11 +73,66 @@ namespace core {
 
 	//-------------------------------------------------------------------------
 	SafeTaggedBlockAllocator::~SafeTaggedBlockAllocator() {
+		Deinit();
+	}
+
+	//-------------------------------------------------------------------------
+	void SafeTaggedBlockAllocator::Init(IAllocator* backingAllocator, u64 blockSize, u64 blockAlignment, MemTag invalidTag) {
+		_backingAllocator = backingAllocator;
+		_freeFirst = INVALID_INDEX;
+		_blockSize = blockSize;
+		_blockAlignment = blockAlignment;
+		_invalidTag = invalidTag;
+
+		ASSERT(backingAllocator);
+		ASSERT(blockSize >= sizeof(FreeBlockHeader));
+
+		_interface._AllocateWithTag = (ITagAllocator::AllocateWithTagFunctin) (&SafeTaggedBlockAllocator::AllocateWithTag);
+		_interface._DeallocateAllWithTag = (ITagAllocator::DeallocateAllWithTagFunction) (&SafeTaggedBlockAllocator::DeallocateAllWithTag);
+		_interface._Deinit = (ITagAllocator::DeinitFunction) (&SafeTaggedBlockAllocator::Deinit);
+	}
+
+	//-------------------------------------------------------------------------
+	void* SafeTaggedBlockAllocator::AllocateWithTag(const MemTag& tag, u64 size, u64 alignment, u64* outAllocated) {
+		u64 blockSize = GetBlockSize();
+
+		if (outAllocated)
+			*outAllocated = size % blockSize == 0 ? size : (size / blockSize + 1) * blockSize;
+
+		u64 blockAlignment = GetBlockAlignment();
+		ASSERT(alignment <= blockAlignment);
+
+		if (size <= blockSize)
+			return AllocateTaggedBlock(tag);
+		else
+			return AllocateTaggedMultiBlock(tag, size / blockSize + 1);
+	}
+
+	//-------------------------------------------------------------------------
+	void SafeTaggedBlockAllocator::DeallocateAllWithTag(const MemTag& tag) {
+		BlockMeta* blockMeta = _data.meta;
+
+		for (u64 i = 0; i < _data.size; ++i, ++blockMeta) {
+			if (blockMeta->tag == tag) {
+				blockMeta->tag = _invalidTag;
+
+				ASSERT(BitArrayIs(_data.occupied, i));
+				BitArrayClear(_data.occupied, i);
+
+				FreeBlockHeader* currentBlock = (FreeBlockHeader*) blockMeta->block;
+				currentBlock->nextIndex = _freeFirst;
+				_freeFirst = i;
+			}
+		}
+	}
+
+	//-------------------------------------------------------------------------
+	void SafeTaggedBlockAllocator::Deinit() {
 		// @TODO this neeeds to be decided, if allocations can be permanent or everything has to be cleared by tag!!!
 		for (u64 i = 0; i < _data.size; ++i) {
 			ASSERT(!BitArrayIs(_data.occupied, i));
 		}
-		
+
 		bool sequence = false;
 		bool wasSequence = false;
 		for (u64 i = 0; i < _data.size; ++i) {
@@ -85,22 +145,12 @@ namespace core {
 		}
 
 		_backingAllocator->Deallocate(_data.data);
+
+		_data.size = 0;
 	}
 
 	//-------------------------------------------------------------------------
-	void SafeTaggedBlockAllocator::Init(IAllocator* backingAllocator, u64 blockSize, u64 blockAlignment, AllocationTag invalidTag) {
-		_backingAllocator = backingAllocator;
-		_freeFirst = INVALID_INDEX;
-		_blockSize = blockSize;
-		_blockAlignment = blockAlignment;
-		_invalidTag = invalidTag;
-
-		ASSERT(backingAllocator);
-		ASSERT(blockSize >= sizeof(FreeBlockHeader));
-	}
-
-	//-------------------------------------------------------------------------
-	void* SafeTaggedBlockAllocator::AllocateTaggedBlock(AllocationTag tag) {
+	void* SafeTaggedBlockAllocator::AllocateTaggedBlock(MemTag tag) {
 		void* result = nullptr;
 
 		if (_freeFirst != INVALID_INDEX) {
@@ -131,24 +181,6 @@ namespace core {
 	}
 
 	//-------------------------------------------------------------------------
-	void SafeTaggedBlockAllocator::ClearByTag(AllocationTag tag) {
-		BlockMeta* blockMeta = _data.meta;
-
-		for (u64 i = 0; i < _data.size; ++i, ++blockMeta) {
-			if (blockMeta->tag == tag) {
-				blockMeta->tag = _invalidTag;
-
-				ASSERT(BitArrayIs(_data.occupied, i));
-				BitArrayClear(_data.occupied, i);
-
-				FreeBlockHeader* currentBlock = (FreeBlockHeader*) blockMeta->block;
-				currentBlock->nextIndex = _freeFirst;
-				_freeFirst = i;
-			}
-		}
-	}
-
-	//-------------------------------------------------------------------------
 	u64 SafeTaggedBlockAllocator::NextFreeIndex(u64 fromIndex) {
 		FreeBlockHeader* freeHeader = (FreeBlockHeader*) _data.meta[fromIndex].block;
 		return freeHeader->nextIndex;
@@ -161,7 +193,7 @@ namespace core {
 	}
 
 	//-------------------------------------------------------------------------
-	void* SafeTaggedBlockAllocator::AllocateMultiBlockAtIndex(AllocationTag tag, u64 blockCount, u64 index) {
+	void* SafeTaggedBlockAllocator::AllocateMultiBlockAtIndex(MemTag tag, u64 blockCount, u64 index) {
 		ASSERT(index + blockCount <= _data.size);
 		
 		// Set used
@@ -172,12 +204,12 @@ namespace core {
 		}
 
 		{
-			u64 dbg = _freeFirst;
+		/*	u64 dbg = _freeFirst;
 			while (dbg != INVALID_INDEX) {
 				printf("%llu ", dbg);
 				dbg = NextFreeIndex(dbg);
 			}
-			printf("\n");
+			printf("\n");*/
 		}
 
 		// Free list fix
@@ -203,18 +235,18 @@ namespace core {
 
 		
 		{
-			u64 dbg = _freeFirst;
+			/*u64 dbg = _freeFirst;
 			while (dbg != INVALID_INDEX) {
 				printf("%llu ", dbg);
 				dbg = NextFreeIndex(dbg);
 			}
-			printf("\n");
+			printf("\n");*/
 		}
 
 		return _data.meta[index].block;
 	}
 	//-------------------------------------------------------------------------
-	void* SafeTaggedBlockAllocator::AllocateNewMultiBlock(AllocationTag tag, u64 blockCount) {
+	void* SafeTaggedBlockAllocator::AllocateNewMultiBlock(MemTag tag, u64 blockCount) {
 		void *result = _backingAllocator->Allocate(_blockSize * blockCount, DEFAULT_ALIGNMENT);
 
 		if (result) {
@@ -236,7 +268,7 @@ namespace core {
 	}
 
 	//-------------------------------------------------------------------------
-	void SafeTaggedBlockAllocator::SetUpBlock(AllocationTag tag, u64 index, void* data, u64 successiveBlocks) {
+	void SafeTaggedBlockAllocator::SetUpBlock(MemTag tag, u64 index, void* data, u64 successiveBlocks) {
 		BitArraySet(_data.occupied, index);
 
 		BlockMeta& meta = _data.meta[index];
@@ -247,7 +279,7 @@ namespace core {
 	}
 
 	//-------------------------------------------------------------------------
-	void* SafeTaggedBlockAllocator::AllocateTaggedMultiBlock(AllocationTag tag, u64 blockCount) {
+	void* SafeTaggedBlockAllocator::AllocateTaggedMultiBlock(MemTag tag, u64 blockCount) {
 		// This allocation is slow compared to single block allocation
 		// Iterating over all allocated block and iterating over free list
 
@@ -327,7 +359,7 @@ namespace core {
 				return false;
 
 			if (_data.data) {
-				memcpy(newData, _data.data, _data.blockCount * _blockSize);
+				Memcpy(newData, _data.data, _data.blockCount * _blockSize);
 				_backingAllocator->Deallocate(_data.data); // @TODO dont deallocate add to pool
 			}
 
@@ -343,7 +375,7 @@ namespace core {
 			ASSERT((u8*)(_data.successiveBlocks + _data.capacity) <= (u8*) _data.meta);
 			ASSERT((u8*)(_data.meta + _data.capacity) <= (u8*) _data.data + _data.blockCount * _blockSize);
 
-			memset(_data.occupied, 0, sizeof(u64) * _data.capacity); 
+			Memset(_data.occupied, 0, sizeof(u64) * _data.capacity); 
 		}
 
 		return true;
@@ -357,5 +389,10 @@ namespace core {
 	//-------------------------------------------------------------------------
 	u64 SafeTaggedBlockAllocator::GetBlockAlignment() {
 		return _blockAlignment;
+	}
+
+	//-------------------------------------------------------------------------
+	ITagAllocator* SafeTaggedBlockAllocator::TagAllocator() {
+		return &_interface;
 	}
 }

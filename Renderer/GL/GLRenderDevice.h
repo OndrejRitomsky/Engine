@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/Types.h>
+#include <Core/Common/Types.h>
 #include <Core/Allocator/IAllocator.h>
 #include <Core/Collection/HashMap.h>
 #include <Core/Collection/LookupArray.h>
@@ -21,47 +21,47 @@ namespace render {
 	struct VertexBuffer;
 	struct VertexDescription;
 	struct IndexBuffer;
-}
 
-namespace gl {
 	// @TODO initialisation is stil not done (as SDL2 is still used)
+
+	// @TODO make resource creation asynchronous
 
 	struct ShaderData;
 
 	// Used for hashing uniformnames
-	using HashFunction = core::Hash(*)(const void* key, u32 length);
+	using HashFunction = h64(*)(const void* key, u32 length);
 
-	class GLRenderDevice : public render::IRenderDevice {
+	class GLRenderDevice : public IRenderDevice {
 	public:
 		GLRenderDevice();
 		~GLRenderDevice() override;
 
 		void Init(core::IAllocator* resourcesAllocator, core::IAllocator* frameAllocator, HashFunction hashFunction);
 
-		virtual void Render(const render::RenderContext* rc, u64 count) override;
-		virtual void ManageResources(const render::RenderResourceContext* rrc, u64 count) override;
+		virtual void Render(const RenderContext* rc, u64 count) override;
+		virtual void ManageResources(const RenderResourceContext* rrc, u64 count) override;
 
 	private:
-		void ProcessCommand(const render::CommandProxy* proxy);
-		void ProcessJobPackage(const render::JobPackage* jobPackage);
-		void ProcessJobPackageResources(const render::Resource* resourceBegin, const render::Resource* resourceEnd);
-		void ProcessJobPackageResource(const render::Resource* resource, u32& inOutTextureCount);
+		void ProcessCommand(const CommandProxy* proxy);
+		void ProcessJobPackage(const JobPackage* jobPackage);
+		void ProcessJobPackageResources(const Resource* resourceBegin, const Resource* resourceEnd);
+		void ProcessJobPackageResource(const Resource* resource, u32& inOutTextureCount);
 		void ProcessJobPackageUniforms(const void* data, u32 count, const ShaderData& shaderData);
 		const void* ProcessJobPackageUniform(const void* data, const ShaderData& shaderData);
 
-		void ProcessJobPackageBatch(const render::BatchDescription* batch);
+		void ProcessJobPackageBatch(const BatchDescription* batch);
 
-		void AllocateShader(const render::Shader* shader);
-		void AllocateTexture(const render::Texture* texture);
-		void AllocateVertexBuffer(const render::VertexBuffer* vb);
-		void AllocateVertexDescription(const render::VertexDescription* vbd);
-		void AllocateIndexBuffer(const render::IndexBuffer* ib);
+		void AllocateShader(const Shader* shader);
+		void AllocateTexture(const Texture* texture);
+		void AllocateVertexBuffer(const VertexBuffer* vb);
+		void AllocateVertexDescription(const VertexDescription* vbd);
+		void AllocateIndexBuffer(const IndexBuffer* ib);
 
-		void DeallocateShader(const render::Resource* shader);
-		void DeallocateTexture(const render::Resource* texture);
-		void DeallocateVertexBuffer(const render::Resource* vb);
-		void DeallocateVertexInformation(const render::Resource* vbi);
-		void DeallocateIndexBuffer(const render::Resource* ib);
+		void DeallocateShader(const Resource* shader);
+		void DeallocateTexture(const Resource* texture);
+		void DeallocateVertexBuffer(const Resource* vb);
+		void DeallocateVertexInformation(const Resource* vbi);
+		void DeallocateIndexBuffer(const Resource* ib);
 
 	private:
 		u64 _bufferSize;
@@ -82,7 +82,7 @@ namespace gl {
 
 		// @TODO ? Not liking this extra indirection
 		// (Engine is creating handles, but maybe render device should (but how to give them back safely))
-		core::HashMap<u32> _handleToIndexMap;
+		core::HashMap<core::Handle> _handleToIndexMap;
 	};
 }
 

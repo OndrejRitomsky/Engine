@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/Types.h>
+#include <Core/Common/Types.h>
 
 namespace render {
 	enum class ResourceType : u8 {

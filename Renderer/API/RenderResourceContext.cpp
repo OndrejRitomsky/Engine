@@ -1,7 +1,7 @@
 #include "RenderResourceContext.h"
 
 #include <Core/Allocator/IAllocator.h>
-#include <Core/Utility.h>
+#include <Core/Algorithm/Memory.h>
 
 #include "Renderer/API/RenderContextStream.h"
 
@@ -28,7 +28,7 @@ namespace render {
 		char* buffer = contextStream->ReserveSize(realSize);
 		AllocationCommand* job = (AllocationCommand*) buffer;
 		job->commandType = type;
-		memcpy(&job->resource, data, size);
+		Memcpy(&job->resource, data, size);
 		return buffer;
 	}
 

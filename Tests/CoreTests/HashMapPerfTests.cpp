@@ -16,7 +16,7 @@
 namespace hashMap_perf_tests {
 
 	/*
-		the tests are a bit biased... core::hashmap doesnt do value == value comparison only keys, so the keys have to be unique
+		the tests are a bit biased... h64map doesnt do value == value comparison only keys, so the keys have to be unique
 
 
 
@@ -30,9 +30,9 @@ namespace hashMap_perf_tests {
 		const unsigned long long keys = 10000;
 		const unsigned long long repeat = 20;
 
-		core::Hash** sequence = new core::Hash*[repeat];
+		h64** sequence = new h64*[repeat];
 		for (int i = 0; i < repeat; ++i) {
-			sequence[i] = new core::Hash[keys];
+			sequence[i] = new h64[keys];
 			for (int j = 0; j < keys; ++j) {
 				sequence[i][j] = j;
 			}
@@ -40,7 +40,7 @@ namespace hashMap_perf_tests {
 		}
 		
 		for (int i = 0; i < repeat; ++i) {
-			std::unordered_map<core::Hash, int> map;
+			std::unordered_map<h64, int> map;
 			PerformanceTestStart(testGroup.GetOther());			
 			int j = 0;
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
@@ -51,7 +51,7 @@ namespace hashMap_perf_tests {
 		for (int i = 0; i < repeat; ++i) {
 			core::HeapAllocator allocator;
 			core::HashMap<int> map;
-			map.Init(&allocator);
+			map.Init(allocator.Allocator());
 			PerformanceTestStart(testGroup.GetMy());
 			int j = 0;
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
@@ -72,9 +72,9 @@ namespace hashMap_perf_tests {
 		const unsigned long long keys = 10000;
 		const unsigned long long repeat = 20;
 
-		core::Hash** sequence = new core::Hash*[repeat];
+		h64** sequence = new h64*[repeat];
 		for (int i = 0; i < repeat; ++i) {
-			sequence[i] = new core::Hash[keys];
+			sequence[i] = new h64[keys];
 			for (int j = 0; j < keys; ++j) {
 				sequence[i][j] = j;
 			}
@@ -83,7 +83,7 @@ namespace hashMap_perf_tests {
 
 		for (int i = 0; i < repeat; ++i) {
 			PerformanceTestStart(testGroup.GetOther());
-			std::unordered_map<core::Hash, int> map;
+			std::unordered_map<h64, int> map;
 			int j = 0;
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
 				map[sequence[i][key]] = j * j + j;
@@ -94,14 +94,14 @@ namespace hashMap_perf_tests {
 			PerformanceTestStart(testGroup.GetMy());
 			core::HeapAllocator allocator;
 			core::HashMap<int> map;
-			map.Init(&allocator);
+			map.Init(allocator.Allocator());
 			int j = 0;
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
-				map.Add(core::ToHash(&sequence[i][key], sizeof(core::Hash)), j * j + i);
+				map.Add(core::ToHash(&sequence[i][key], sizeof(h64)), j * j + i);
 			PerformanceTestStop(testGroup.GetMy());
 		}
 
-		for (core::Hash i = 0; i < repeat; ++i) {
+		for (h64 i = 0; i < repeat; ++i) {
 			delete[] sequence[i];
 		}
 		delete[] sequence;
@@ -114,9 +114,9 @@ namespace hashMap_perf_tests {
 		const unsigned long long keys = 10000;
 		const unsigned long long repeat = 20;
 
-		core::Hash** sequence = new core::Hash*[repeat];
+		h64** sequence = new h64*[repeat];
 		for (int i = 0; i < repeat; ++i) {
-			sequence[i] = new core::Hash[keys];
+			sequence[i] = new h64[keys];
 			for (int j = 0; j < keys; ++j) {
 				sequence[i][j] = j;
 			}
@@ -124,7 +124,7 @@ namespace hashMap_perf_tests {
 		}
 		for (int i = 0; i < repeat; ++i) {
 
-			std::unordered_map<core::Hash, int> stdmap;
+			std::unordered_map<h64, int> stdmap;
 			int j = 0;
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
 				stdmap[sequence[i][key]] = j + j;
@@ -140,7 +140,7 @@ namespace hashMap_perf_tests {
 		for (int i = 0; i < repeat; ++i) {
 			core::HeapAllocator allocator;
 			core::HashMap<int> map;
-			map.Init(&allocator);
+			map.Init(allocator.Allocator());
 			int j = 0;
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
 				map.Add(sequence[i][key], j + j);
@@ -166,9 +166,9 @@ namespace hashMap_perf_tests {
 		const unsigned long long keys = 10000;
 		const unsigned long long repeat = 20;
 
-		core::Hash** sequence = new core::Hash*[repeat];
+		h64** sequence = new h64*[repeat];
 		for (int i = 0; i < repeat; ++i) {
-			sequence[i] = new core::Hash[keys];
+			sequence[i] = new h64[keys];
 			for (int j = 0; j < keys; ++j) {
 				sequence[i][j] = j;
 			}
@@ -176,7 +176,7 @@ namespace hashMap_perf_tests {
 		}
 
 		for (int i = 0; i < repeat; ++i) {
-			std::unordered_map<core::Hash, int> stdmap;
+			std::unordered_map<h64, int> stdmap;
 			int j = 0;
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
 				stdmap[sequence[i][key]] = j + j;
@@ -191,7 +191,7 @@ namespace hashMap_perf_tests {
 		for (int i = 0; i < repeat; ++i) {
 			core::HeapAllocator allocator;
 			core::HashMap<int> map;
-			map.Init(&allocator);
+			map.Init(allocator.Allocator());
 			int j = 0;
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
 				map.Add(sequence[i][key], j + j);
@@ -217,9 +217,9 @@ namespace hashMap_perf_tests {
 		const unsigned long long keys = 10000;
 		const unsigned long long repeat = 20;
 
-		core::Hash** sequence = new core::Hash*[repeat];
+		h64** sequence = new h64*[repeat];
 		for (int i = 0; i < repeat; ++i) {
-			sequence[i] = new core::Hash[keys];
+			sequence[i] = new h64[keys];
 			for (int j = 0; j < keys; ++j) {
 				sequence[i][j] = j;
 			}
@@ -227,7 +227,7 @@ namespace hashMap_perf_tests {
 		}
 
 		for (int i = 0; i < repeat; ++i) {
-			std::unordered_map<core::Hash, int> stdmap;
+			std::unordered_map<h64, int> stdmap;
 			int j = 0;
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
 				stdmap[sequence[i][key]] = j + j;
@@ -242,15 +242,15 @@ namespace hashMap_perf_tests {
 		for (int i = 0; i < repeat; ++i) {
 			core::HeapAllocator allocator;
 			core::HashMap<int> map;
-			map.Init(&allocator);
+			map.Init(allocator.Allocator());
 			int j = 0;
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
-				map.Add(core::ToHash(&sequence[i][key], sizeof(core::Hash)), j + j);
+				map.Add(core::ToHash(&sequence[i][key], sizeof(h64)), j + j);
 
 			int sum = 0;
 			PerformanceTestStart(testGroup.GetMy());
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
-				sum += *map.Find(core::ToHash(&sequence[i][key], sizeof(core::Hash)));
+				sum += *map.Find(core::ToHash(&sequence[i][key], sizeof(h64)));
 			PerformanceTestStop2(testGroup.GetMy(), sum);
 		}
 
@@ -268,9 +268,9 @@ namespace hashMap_perf_tests {
 		const unsigned long long keys = 10000;
 		const unsigned long long repeat = 20;
 
-		core::Hash** sequence = new core::Hash*[repeat];
+		h64** sequence = new h64*[repeat];
 		for (int i = 0; i < repeat; ++i) {
-			sequence[i] = new core::Hash[keys];
+			sequence[i] = new h64[keys];
 			for (int j = 0; j < keys; ++j) {
 				sequence[i][j] = j;
 			}
@@ -278,7 +278,7 @@ namespace hashMap_perf_tests {
 		}
 
 		for (int i = 0; i < repeat; ++i) {
-			std::unordered_map<core::Hash, int> stdmap;
+			std::unordered_map<h64, int> stdmap;
 			int j = 0;
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
 				stdmap[sequence[i][key]] = j + j;
@@ -298,19 +298,19 @@ namespace hashMap_perf_tests {
 		for (int i = 0; i < repeat; ++i) {
 			core::HeapAllocator allocator;
 			core::HashMap<int> map;
-			map.Init(&allocator);
+			map.Init(allocator.Allocator());
 			int j = 0;
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
-				map.Add(core::ToHash(&sequence[i][key], sizeof(core::Hash)), j + j);
+				map.Add(core::ToHash(&sequence[i][key], sizeof(h64)), j + j);
 
 			int sum = 0;
 			PerformanceTestStart(testGroup.GetMy());
 			for (int key = 0, j = 0; key < keys; ++key, ++j) {
-				auto hash = core::ToHash(&sequence[i][key], sizeof(core::Hash));
+				auto hash = core::ToHash(&sequence[i][key], sizeof(h64));
 				auto valuep = map.Find(hash);
 				if (valuep) {
 					sum += *valuep;
-					map.Remove(hash);
+					map.SwapRemove(hash);
 				}
 			}
 			PerformanceTestStop2(testGroup.GetMy(), sum);
@@ -330,9 +330,9 @@ namespace hashMap_perf_tests {
 		const unsigned long long keys = 10000;
 		const unsigned long long repeat = 20;
 
-		core::Hash** sequence = new core::Hash*[repeat];
+		h64** sequence = new h64*[repeat];
 		for (int i = 0; i < repeat; ++i) {
-			sequence[i] = new core::Hash[keys];
+			sequence[i] = new h64[keys];
 			for (int j = 0; j < keys; ++j) {
 				sequence[i][j] = j;
 			}
@@ -340,7 +340,7 @@ namespace hashMap_perf_tests {
 		}
 
 		for (int i = 0; i < repeat; ++i) {
-			std::unordered_map<core::Hash, int> stdmap;
+			std::unordered_map<h64, int> stdmap;
 			int j = 0;
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
 				stdmap[sequence[i][key]] = j + j;
@@ -361,20 +361,20 @@ namespace hashMap_perf_tests {
 		for (int i = 0; i < repeat; ++i) {
 			core::HeapAllocator allocator;
 			core::HashMap<int> map;
-			map.Init(&allocator);
+			map.Init(allocator.Allocator());
 			int j = 0;
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
-				map.Add(core::ToHash(&sequence[i][key], sizeof(core::Hash)), j + j);
+				map.Add(core::ToHash(&sequence[i][key], sizeof(h64)), j + j);
 
 			int sum = 0;
 			PerformanceTestStart(testGroup.GetMy());
 			for (int key = 0, j = 0; key < keys; ++key, ++j) {
 				auto k = key % 2 == 0 ? sequence[i][key] : keys + sequence[i][key];
-				auto hash = core::ToHash(&k, sizeof(core::Hash));
+				auto hash = core::ToHash(&k, sizeof(h64));
 				auto valuep = map.Find(hash);
 				if (valuep) {
 					sum += *valuep;
-					map.Remove(hash);
+					map.SwapRemove(hash);
 				}
 			}
 			PerformanceTestStop2(testGroup.GetMy(), sum);

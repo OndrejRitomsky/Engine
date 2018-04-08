@@ -1,12 +1,14 @@
 #pragma once
 
-#include "Core/Types.h"
-#include "Core/CoreAssert.h"
-#include "Core/Utility.h"
+#include "Core/Common/Types.h"
+
+#include "Core/Common/Types.h"
+#include "Core/Common/Assert.h"
+#include "Core/Algorithm/Memory.h"
+#include "Core/Algorithm/Move.h"
 
 #include "Core/Allocator/IAllocator.h"
 #include "Core/Allocator/IAllocator.inl"
-#include "Core/Allocator/Reallocation.h"
 
 namespace core {
 
@@ -67,7 +69,7 @@ namespace core {
 		Type* oldData = _data;
 		u32 oldCount = _count;
 		IAllocator* oldAllocator = _allocator;
-		memset(this, 0, sizeof(Array<Type>));
+		Memset(this, 0, sizeof(Array<Type>));
 
 		_allocator = rhs._allocator;
 		Reallocate(rhs._capacity);
@@ -86,7 +88,7 @@ namespace core {
 		Type* oldData = _data;
 		u32 oldCount = _count;
 		IAllocator* oldAllocator = _allocator;
-		memset(this, 0, sizeof(Array<Type>));
+		Memset(this, 0, sizeof(Array<Type>));
 
 		_data = rhs._data;
 		_count = rhs._count;
@@ -178,14 +180,14 @@ namespace core {
 	template<typename Type>
 	inline void Array<Type>::Push(const Type& value) {
 		ReservePush();
-		new (_data + _count++) Type(value);
+		Placement(_data + _count++) Type(value);
 	}
 
 	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline void Array<Type>::Push(Type&& value) {
 		ReservePush();
-		new (_data + _count++) Type(move(value));
+		Placement(_data + _count++) Type(move(value));
 	}
 
 	//---------------------------------------------------------------------------
@@ -195,7 +197,7 @@ namespace core {
 		u32 needed = _count + count;
 		Reserve(doubleCapacity > needed ? doubleCapacity : needed);
 		for (u32 i = 0; i < count; ++i)
-			new (_data + _count + i) Type(values[i]);
+			Placement(_data + _count + i) Type(values[i]);
 
 		_count += count;
 	}
@@ -260,7 +262,16 @@ namespace core {
 			return;
 
 		_capacity = capacity;
-		_data = ReallocateMove<Type>(_allocator, static_cast<Type*>(_data), _count, _capacity);
+		Type* result = static_cast<Type*>(_allocator->Allocate(capacity * sizeof(Type), alignof(Type)));
+		for (u32 i = 0; i < _count; ++i) {
+			result[i] = move(_data[i]);
+			_data[i].~Type();
+		}
+
+		if (_data)
+			_allocator->Deallocate(_data);
+
+		_data = result;
 	}
 
 	template<typename Type>

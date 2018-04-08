@@ -1,23 +1,22 @@
 #pragma once
 
-#include "Core/Types.h"
-#include "Core/CoreTypes.h"
+#include "Core/Common/Types.h"
 #include "Core/Collection/Base/HashMapBase.h"
 
 namespace core {
 	class IAllocator;
 
 	/**
-	* HashMap<Type> : hashmap with inplace linked list collision resolution implementation
-	* Keys have to be unique, HashMap does not extra checks on equality
+	* HashMap<Type> : hashmap with in separate buffer linked list collision resolution
+	* Keys have to be unique, HashMap does not value checks on equality
 	* Lookup is with extra indirection
 	* Data are contiguous, iterating is without indirection
 	* HashMap is not initilized in constructor or init, first Add will reserve UNINITIALIZED_PUSH_INIT_CAPACITY
-	* HashMap will double its size, if is its size reached treshold = FULL_RATIO * capacity;
-	* There is no limit to internal index collision (making it O(n) in worst case == colliding with n / k elements (but will assert on > 5))
+	* There is no limit to internal index collision (making it O(n) in worst case == colliding with n / k elements (but will assert on > 10))
 	*/
 
-	// @TODO iterator find -> iterator remove
+	// @TODO iterator find -> iterator remove ??
+	// @TODO equality has to be checked (need for interned strings)
 
 	template<typename Value>
 	class HashMap {
@@ -25,8 +24,8 @@ namespace core {
 		static const u32 PUSH_INIT_CAPACITY = 17;
 
 	public:
-		class ConstKeyValueIterator;
-		friend class ConstKeyValueIterator;
+		struct ConstKeyValueIterator;
+		struct KeyValueIterator;
 
 	public:
 		HashMap();
@@ -39,40 +38,56 @@ namespace core {
 
 		void Init(IAllocator* allocator);
 
-		Value* Find(Hash hash);
-		const Value* Find(Hash hash) const;
+		Value* Find(h64 hash);
+		const Value* Find(h64 hash) const;
 
 		Value* begin();
 		Value* end();
 
-		const Value* cbegin() const;
-		const Value* cend() const;
+		const Value* begin() const;
+		const Value* end() const;
 
-		const Hash* cKeyBegin() const;
-		const Hash* cKeyEnd() const;
+		const h64* beginKey() const;
+		const h64* endKey() const;
 
-		ConstKeyValueIterator cKeyValueBegin() const;
-		ConstKeyValueIterator cKeyValueEnd() const;
+		// Key is always const!
+		KeyValueIterator Iterator();
+		const ConstKeyValueIterator CIterator() const;
 
 		u32 Count() const;
 
-		bool Add(Hash hash, const Value& value);
-		bool Add(Hash hash, Value&& value);
+		bool Add(h64 hash, const Value& value);
+		bool Add(h64 hash, Value&& value);
 
-		bool Remove(Hash hash);
+		// Remove does swap on values and keys 
+		// iterating - removing decrease count, don't increase index
+		bool SwapRemove(h64 hash);
 
 		void Clear();
 
 	private:
-		bool InternalAdd(Hash hash, u32& outIndex);
+		void Allocate(u32 capacity);
 
-		HashMapBase Allocate(u32 capacity);
-
-		void Rehash(u32 capacity);
+		void IncreaseCapacity();
 
 	private:
 		HashMapBase _base;
+		Value* _values;
 		IAllocator* _allocator;
+	};
+
+	template<typename Value>
+	struct HashMap<Value>::KeyValueIterator {
+		u32 count;
+		const h64* keys;
+		Value* values;
+	};
+
+	template<typename Value>
+	struct HashMap<Value>::ConstKeyValueIterator {
+		u32 count;
+		const h64* keys;
+		const Value* values;
 	};
 }
 

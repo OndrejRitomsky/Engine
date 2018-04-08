@@ -1,7 +1,6 @@
 #include "GLRenderDevice.h"
 
-#include <Core/Utility.h>
-#include <Core/Allocator/Reallocation.h>
+#include <Core/Common/Utility.h>
 #include <Core/Collection/LookupArray.inl>
 #include <Core/Collection/HashMap.inl>
 
@@ -21,9 +20,9 @@
 #include "Renderer/GL/Internal/GLWrapper.h"
 #include "Renderer/GL/Internal/GLUtil.h"
 
-namespace gl {
+namespace render {
 	struct UniformData {
-		render::UniformType type;
+		UniformType type;
 		u32 glUniformType;
 
 		i32 location;
@@ -55,42 +54,43 @@ namespace gl {
 
 		ASSERT2(_handleToIndexMap.Count() == 0, "Deallocate commands must be sent!");
 
-		for (auto& it = _handleToIndexMap.cKeyValueBegin(); it != _handleToIndexMap.cKeyValueEnd(); ++it) {
-			const render::Resource* resource = reinterpret_cast<const render::Resource*>(&it.key);
-			switch (render::ResourceGetType(resource)) {
-			case render::ResourceType::SHADER:
+		auto it = _handleToIndexMap.CIterator();
+		for (u32 i = 0; i < it.count; ++i) {
+			const Resource* resource = reinterpret_cast<const Resource*>(&it.keys[i]);
+			switch (ResourceGetType(resource)) {
+			case ResourceType::SHADER:
 			{
-				const ShaderData& shaderData = _shaders.Get(it.value);
+				const ShaderData& shaderData = _shaders.Get(it.values[i]);
 				gl::program::Delete(shaderData.shader);
-				_shaders.Remove(it.value);
+				_shaders.Remove(it.values[i]);
 				break;
 			}
-			case render::ResourceType::TEXTURE:
+			case ResourceType::TEXTURE:
 			{
-				u32 index = _textures.Get(it.value);
+				u32 index = _textures.Get(it.values[i]);
 				gl::texture::Delete(index); 
-				_textures.Remove(it.value);
+				_textures.Remove(it.values[i]);
 				break;
 			}
-			case render::ResourceType::VERTEX_BUFFER:
+			case ResourceType::VERTEX_BUFFER:
 			{
-				u32 index = _vertexBuffers.Get(it.value);
-				gl::vertex::DeleteBuffers(&index, 1);
-				_vertexBuffers.Remove(it.value);
+				u32 index = _vertexBuffers.Get(it.values[i]);
+				gl::vertex::DeleteBuffers((u32*) &index, 1);
+				_vertexBuffers.Remove(it.values[i]);
 				break;
 			}
-			case render::ResourceType::VERTEX_DESCRIPTION:
+			case ResourceType::VERTEX_DESCRIPTION:
 			{
-				u32 index = _vertexDescriptions.Get(it.value);
-				gl::vertex::DeleteArrayObjects(&index, 1);
-				_vertexDescriptions.Remove(it.value);
+				u32 index = _vertexDescriptions.Get(it.values[i]);
+				gl::vertex::DeleteArrayObjects((u32*) &index, 1);
+				_vertexDescriptions.Remove(it.values[i]);
 				break;
 			}
-			case render::ResourceType::INDEX_BUFFER: 
+			case ResourceType::INDEX_BUFFER: 
 			{
-				u32 index = _indexBuffers.Get(it.value);
-				gl::vertex::DeleteBuffers(&index, 1);
-				_indexBuffers.Remove(it.value);
+				u32 index = _indexBuffers.Get(it.values[i]);
+				gl::vertex::DeleteBuffers((u32*) &index, 1);
+				_indexBuffers.Remove(it.values[i]);
 				break;
 			}
 			default: ASSERT(false); break;
@@ -113,32 +113,37 @@ namespace gl {
 	}
 
 	//---------------------------------------------------------------------------
-	void GLRenderDevice::Render(const render::RenderContext* rc, u64 count) {
+	void GLRenderDevice::Render(const RenderContext* rc, u64 count) {
 		if (!_bufferCapacity) {
 			// @TODO allocators should have out capacity
 			_bufferCapacity = 1024 * 1024;
-			_commandBuffer = static_cast<char*>(core::ReallocateMemCopy(_resourcesAllocator, nullptr, 0, alignof(u64), _bufferCapacity));
+
+			_commandBuffer = static_cast<char*>(_resourcesAllocator->Allocate(_bufferCapacity, alignof(char)));
 		}
 
 		for (u64 i = 0; i < count; ++i) {
 			u32 commandsCount;
-			const render::CommandProxy* proxies = rc[i].GetCommands(commandsCount);
+			const CommandProxy* proxies = rc[i].GetCommands(commandsCount);
 
-			u64 commandsSize = commandsCount * sizeof(render::CommandProxy);
+			u64 commandsSize = commandsCount * sizeof(CommandProxy);
 			if (_bufferSize + commandsSize > _bufferCapacity) {
 				_bufferCapacity *= 2;
-				_commandBuffer = static_cast<char*>(core::ReallocateMemCopy(_resourcesAllocator, _commandBuffer, _bufferSize, alignof(u64), _bufferCapacity));
+
+				char* result = static_cast<char*>(_resourcesAllocator->Allocate(_bufferCapacity, alignof(char)));
+				Memcpy(result, _commandBuffer, _bufferSize);
+				_resourcesAllocator->Deallocate(_commandBuffer);
+				_commandBuffer = result;
 			}
 
-			memcpy(_commandBuffer + _bufferSize, proxies, commandsSize);
+			Memcpy(_commandBuffer + _bufferSize, proxies, commandsSize);
 			_bufferSize += commandsSize;
 		}
 
 		// @TODO ^^
 		// Who should sort and instance commands, render device or engine pipeline
 
-		render::CommandProxy* proxy = reinterpret_cast<render::CommandProxy*>(_commandBuffer);
-		render::CommandProxy* proxyEnd = proxy + _bufferSize / sizeof(render::CommandProxy);
+		CommandProxy* proxy = reinterpret_cast<CommandProxy*>(_commandBuffer);
+		CommandProxy* proxyEnd = proxy + _bufferSize / sizeof(CommandProxy);
 
 		for (; proxy < proxyEnd; ++proxy)
 			ProcessCommand(proxy);
@@ -147,34 +152,34 @@ namespace gl {
 	}
 
 	//---------------------------------------------------------------------------
-	void GLRenderDevice::ManageResources(const render::RenderResourceContext* rrc, u64 count) {
+	void GLRenderDevice::ManageResources(const RenderResourceContext* rrc, u64 count) {
 		for (u32 i = 0; i < count; ++i) {
 			const char* data = rrc[i].GetData();
-			const render::CommandHeader* commandHeader = reinterpret_cast<const render::CommandHeader*>(data);
+			const CommandHeader* commandHeader = reinterpret_cast<const CommandHeader*>(data);
 
-			if (commandHeader->commandType == render::CommandType::RESOURCE_ALLOCATION) {
-				const render::AllocationCommand* command = static_cast<const render::AllocationCommand*>(commandHeader);
-				const render::Resource* resource = &command->resource;
+			if (commandHeader->commandType == CommandType::RESOURCE_ALLOCATION) {
+				const AllocationCommand* command = static_cast<const AllocationCommand*>(commandHeader);
+				const Resource* resource = &command->resource;
 
-				switch (render::ResourceGetType(resource)) {
-				case render::ResourceType::SHADER: AllocateShader(static_cast<const render::Shader*>(resource)); break;
-				case render::ResourceType::TEXTURE:	AllocateTexture(static_cast<const render::Texture*>(resource));	break;
-				case render::ResourceType::VERTEX_BUFFER: AllocateVertexBuffer(static_cast<const render::VertexBuffer*>(resource)); break;
-				case render::ResourceType::VERTEX_DESCRIPTION: AllocateVertexDescription(static_cast<const render::VertexDescription*>(resource)); break;
-				case render::ResourceType::INDEX_BUFFER: AllocateIndexBuffer(static_cast<const render::IndexBuffer*>(resource)); break;
+				switch (ResourceGetType(resource)) {
+				case ResourceType::SHADER: AllocateShader(static_cast<const Shader*>(resource)); break;
+				case ResourceType::TEXTURE:	AllocateTexture(static_cast<const Texture*>(resource));	break;
+				case ResourceType::VERTEX_BUFFER: AllocateVertexBuffer(static_cast<const VertexBuffer*>(resource)); break;
+				case ResourceType::VERTEX_DESCRIPTION: AllocateVertexDescription(static_cast<const VertexDescription*>(resource)); break;
+				case ResourceType::INDEX_BUFFER: AllocateIndexBuffer(static_cast<const IndexBuffer*>(resource)); break;
 				default: ASSERT(false); break;
 				}
 			}
-			else if (commandHeader->commandType == render::CommandType::RESOURCE_DEALLOCATION) {
-				const render::DeallocationCommand* command = static_cast<const render::DeallocationCommand*>(commandHeader);
-				const render::Resource* resource = &command->resource;
+			else if (commandHeader->commandType == CommandType::RESOURCE_DEALLOCATION) {
+				const DeallocationCommand* command = static_cast<const DeallocationCommand*>(commandHeader);
+				const Resource* resource = &command->resource;
 
-				switch (render::ResourceGetType(resource)) {
-				case render::ResourceType::SHADER: DeallocateShader(resource); break;
-				case render::ResourceType::TEXTURE:	DeallocateTexture(resource); break;
-				case render::ResourceType::VERTEX_BUFFER: DeallocateVertexBuffer(resource); break;
-				case render::ResourceType::VERTEX_DESCRIPTION: DeallocateVertexInformation(resource); break;
-				case render::ResourceType::INDEX_BUFFER: DeallocateIndexBuffer(resource); break;
+				switch (ResourceGetType(resource)) {
+				case ResourceType::SHADER: DeallocateShader(resource); break;
+				case ResourceType::TEXTURE:	DeallocateTexture(resource); break;
+				case ResourceType::VERTEX_BUFFER: DeallocateVertexBuffer(resource); break;
+				case ResourceType::VERTEX_DESCRIPTION: DeallocateVertexInformation(resource); break;
+				case ResourceType::INDEX_BUFFER: DeallocateIndexBuffer(resource); break;
 				default: ASSERT(false); break;
 				}
 			}
@@ -185,27 +190,27 @@ namespace gl {
 	}
 
 	//---------------------------------------------------------------------------
-	void GLRenderDevice::ProcessCommand(const render::CommandProxy* proxy) {
-		const render::CommandHeader* commandHeader = reinterpret_cast<const render::CommandHeader*>(proxy->data);
+	void GLRenderDevice::ProcessCommand(const CommandProxy* proxy) {
+		const CommandHeader* commandHeader = reinterpret_cast<const CommandHeader*>(proxy->data);
 
 		switch (commandHeader->commandType) {
-		case render::CommandType::RENDER:
+		case CommandType::RENDER:
 		{
-			const render::RenderJobCommand* renderCommand = static_cast<const render::RenderJobCommand*>(commandHeader);
+			const RenderJobCommand* renderCommand = static_cast<const RenderJobCommand*>(commandHeader);
 			ProcessJobPackage(&renderCommand->jobPackage);
 			break;
 		}
-		case render::CommandType::CLEAR:
+		case CommandType::CLEAR:
 		{
-			u32 fl = static_cast<const render::ClearCommand*>(commandHeader)->flags;
+			u32 fl = static_cast<const ClearCommand*>(commandHeader)->flags;
 			f32 color[4] = {0,0,0,1};
 
 			gl::draw::ClearColor(color);
-			gl::draw::Clear((fl & render::ClearFlags::COLOR) > 0, (fl & render::ClearFlags::DEPTH) > 0, (fl & render::ClearFlags::STENCIL) > 0);
+			gl::draw::Clear((fl & ClearFlags::COLOR) > 0, (fl & ClearFlags::DEPTH) > 0, (fl & ClearFlags::STENCIL) > 0);
 			break;
 		}
-		case render::CommandType::RESOURCE_ALLOCATION:
-		case render::CommandType::RESOURCE_DEALLOCATION:
+		case CommandType::RESOURCE_ALLOCATION:
+		case CommandType::RESOURCE_DEALLOCATION:
 		default:
 			ASSERT(false);
 			break;
@@ -213,23 +218,23 @@ namespace gl {
 	}
 
 	//---------------------------------------------------------------------------
-	void GLRenderDevice::ProcessJobPackage(const render::JobPackage* jobPackage) {
+	void GLRenderDevice::ProcessJobPackage(const JobPackage* jobPackage) {
 		const char* resourceData = reinterpret_cast<const char*>(jobPackage) + jobPackage->resourcesOffset;
-		const render::Resource* resource = reinterpret_cast<const render::Resource*>(resourceData);
-		const render::Resource* resourceEnd = reinterpret_cast<const render::Resource*>(resourceData + jobPackage->resourcesCount);
+		const Resource* resource = reinterpret_cast<const Resource*>(resourceData);
+		const Resource* resourceEnd = reinterpret_cast<const Resource*>(resourceData + jobPackage->resourcesCount);
 
 
 		const char* uniforms = reinterpret_cast<const char*>(jobPackage) + jobPackage->uniformsOffset;
 
 		ASSERT((char*) resourceEnd <= (char*) jobPackage + jobPackage->size);
 
-		const render::Resource* shaderResource = &jobPackage->shader;
-		ASSERT(render::ResourceGetType(shaderResource) == render::ResourceType::SHADER);
+		const Resource* shaderResource = &jobPackage->shader;
+		ASSERT(ResourceGetType(shaderResource) == ResourceType::SHADER);
 
-		const u32* index = _handleToIndexMap.Find(shaderResource->handle);
-		ASSERT(index);
+		const core::Handle* handle = _handleToIndexMap.Find(shaderResource->handle);
+		ASSERT(handle);
 
-		const ShaderData& shaderData = _shaders.Get(*index);
+		const ShaderData& shaderData = _shaders.Get(*handle);
 		gl::program::Use(shaderData.shader);
 
 		ProcessJobPackageResources(resource, resourceEnd);
@@ -239,19 +244,19 @@ namespace gl {
 	}
 
 	//---------------------------------------------------------------------------
-	void GLRenderDevice::ProcessJobPackageResources(const render::Resource* resourceBegin, const render::Resource* resourceEnd) {
+	void GLRenderDevice::ProcessJobPackageResources(const Resource* resourceBegin, const Resource* resourceEnd) {
 		u32 texturesCount = 0;
 
 		// OpenGL specific find VAO first!
-		const render::Resource* vertexDescription = nullptr;
-		for (const render::Resource* resource = resourceBegin; resource < resourceEnd; ++resource) {
-			if (render::ResourceGetType(resource) == render::ResourceType::VERTEX_DESCRIPTION) {
+		const Resource* vertexDescription = nullptr;
+		for (const Resource* resource = resourceBegin; resource < resourceEnd; ++resource) {
+			if (ResourceGetType(resource) == ResourceType::VERTEX_DESCRIPTION) {
 				vertexDescription = resource;
 				break;
 			}
 		}
 
-		const render::Resource* resource = resourceBegin;
+		const Resource* resource = resourceBegin;
 
 		if (vertexDescription) {
 			ProcessJobPackageResource(vertexDescription, texturesCount);
@@ -266,36 +271,36 @@ namespace gl {
 			ProcessJobPackageResource(resource, texturesCount);
 	}
 
-	void GLRenderDevice::ProcessJobPackageResource(const render::Resource* resource, u32& inOutTextureCount) {
-		const u32* index = _handleToIndexMap.Find(resource->handle);
-		ASSERT(index);
+	void GLRenderDevice::ProcessJobPackageResource(const Resource* resource, u32& inOutTextureCount) {
+		const core::Handle* handle = _handleToIndexMap.Find(resource->handle);
+		ASSERT(handle);
 		
-		switch (render::ResourceGetType(resource)) {
-		case render::ResourceType::SHADER: 
+		switch (ResourceGetType(resource)) {
+		case ResourceType::SHADER: 
 			ASSERT(false); 
 			break;
-		case render::ResourceType::TEXTURE:
+		case ResourceType::TEXTURE:
 		{
-			u32 texture = _textures.Get(*index);
+			u32 texture = _textures.Get(*handle);
 			gl::texture::SetActiveTexture(inOutTextureCount++); // @TODO find out if seting every frame is ok
 			gl::texture::Bind(texture);
 			break;
 		}
-		case render::ResourceType::VERTEX_BUFFER:
+		case ResourceType::VERTEX_BUFFER:
 		{
-			u32 vb = _vertexBuffers.Get(*index);
+			u32 vb = _vertexBuffers.Get(*handle);
 			gl::vertex::BindArrayBuffer(vb);
 			break;
 		}
-		case render::ResourceType::VERTEX_DESCRIPTION:
+		case ResourceType::VERTEX_DESCRIPTION:
 		{
-			u32 vb = _vertexDescriptions.Get(*index);
+			u32 vb = _vertexDescriptions.Get(*handle);
 			gl::vertex::BindArrayObject(vb);
 			break;
 		}
-		case render::ResourceType::INDEX_BUFFER:
+		case ResourceType::INDEX_BUFFER:
 		{
-			u32 ib = _indexBuffers.Get(*index);
+			u32 ib = _indexBuffers.Get(*handle);
 			gl::vertex::BindIndexArrayBuffer(ib);
 			break;
 		}
@@ -313,7 +318,7 @@ namespace gl {
 
 	//---------------------------------------------------------------------------
 	const void* GLRenderDevice::ProcessJobPackageUniform(const void* data, const ShaderData& shaderData) {
-		const render::UniformHeader* header = static_cast<const render::UniformHeader*>(data);
+		const UniformHeader* header = static_cast<const UniformHeader*>(data);
 		
 		const UniformData* uniform = shaderData.uniformData.Find(header->nameHash);
 
@@ -321,33 +326,33 @@ namespace gl {
 		const char* result = static_cast<const char*>(data);
 
 		switch (uniform->type) {
-		case render::UniformType::FLOAT:
-			gl::uniform::Set1f(uniform->location, reinterpret_cast<const render::FloatUniform*>(header)->value);
-			result += sizeof(render::FloatUniform);
+		case UniformType::FLOAT:
+			gl::uniform::Set1f(uniform->location, reinterpret_cast<const FloatUniform*>(header)->value);
+			result += sizeof(FloatUniform);
 			break;
-		case render::UniformType::INT:
-			gl::uniform::Set1i(uniform->location, reinterpret_cast<const render::IntUniform*>(header)->value);
-			result += sizeof(render::IntUniform);
+		case UniformType::INT:
+			gl::uniform::Set1i(uniform->location, reinterpret_cast<const IntUniform*>(header)->value);
+			result += sizeof(IntUniform);
 			break;
-		case render::UniformType::VECTOR2:
-			gl::uniform::Set2f(uniform->location, reinterpret_cast<const render::Vector2Uniform*>(header)->values);
-			result += sizeof(render::Vector2Uniform);
+		case UniformType::VECTOR2:
+			gl::uniform::Set2f(uniform->location, reinterpret_cast<const Vector2Uniform*>(header)->values);
+			result += sizeof(Vector2Uniform);
 			break;
-		case render::UniformType::VECTOR3:
-			gl::uniform::Set3f(uniform->location, reinterpret_cast<const render::Vector3Uniform*>(header)->values);
-			result += sizeof(render::Vector3Uniform);
+		case UniformType::VECTOR3:
+			gl::uniform::Set3f(uniform->location, reinterpret_cast<const Vector3Uniform*>(header)->values);
+			result += sizeof(Vector3Uniform);
 			break;
-		case render::UniformType::MATRIX:
-			gl::uniform::SetMatrix4f(uniform->location, reinterpret_cast<const render::MatrixUniform*>(header)->values);
-			result += sizeof(render::MatrixUniform);
+		case UniformType::MATRIX:
+			gl::uniform::SetMatrix4f(uniform->location, reinterpret_cast<const MatrixUniform*>(header)->values);
+			result += sizeof(MatrixUniform);
 			break;
-		case render::UniformType::SAMPLER2D:
+		case UniformType::SAMPLER2D:
 		{
-			u32* index = _handleToIndexMap.Find(reinterpret_cast<const render::Sampler2DUniform*>(header)->handle);
-			u32 glID = _textures.Get(*index);
+			core::Handle* handle = _handleToIndexMap.Find(reinterpret_cast<const Sampler2DUniform*>(header)->handle);
+			u32 glID = _textures.Get(*handle);
 			gl::texture::SetActiveTexture(0); // @TODO find out if seting every frame is ok
 			gl::texture::Bind(glID);
-			result += sizeof(render::Sampler2DUniform);
+			result += sizeof(Sampler2DUniform);
 			break;
 		}
 		default:
@@ -359,9 +364,9 @@ namespace gl {
 	}
 
 	//---------------------------------------------------------------------------
-	void GLRenderDevice::ProcessJobPackageBatch(const render::BatchDescription* batch) {
+	void GLRenderDevice::ProcessJobPackageBatch(const BatchDescription* batch) {
 		switch (batch->type) {
-		case render::BatchType::LINES:
+		case BatchType::LINES:
 		{
 			if (batch->instances > 1) {
 				if (batch->indices > 0)
@@ -377,7 +382,7 @@ namespace gl {
 			}
 			break;
 		}
-		case render::BatchType::LINE_LOOP:
+		case BatchType::LINE_LOOP:
 		{
 			if (batch->instances > 1) {
 				if (batch->indices > 0)
@@ -393,7 +398,7 @@ namespace gl {
 			}
 			break;
 		}
-		case render::BatchType::TRIANGLES:
+		case BatchType::TRIANGLES:
 		{
 			if (batch->instances > 1) {
 				if (batch->indices > 0)
@@ -413,7 +418,7 @@ namespace gl {
 	}
 
 	//---------------------------------------------------------------------------
-	void GLRenderDevice::AllocateShader(const render::Shader* shader) {
+	void GLRenderDevice::AllocateShader(const Shader* shader) {
 		ASSERT(!_handleToIndexMap.Find(shader->handle));
 
 		u32 vs = gl::util::CompileVertexShader(shader->vertexStage.data);
@@ -423,20 +428,20 @@ namespace gl {
 		gl::shader::Delete(vs);
 		gl::shader::Delete(fs);
 		
-		u32 index;
+		core::Handle handle;
 		{
 			ShaderData shaderData;
 			shaderData.shader = program;
 			shaderData.uniformData.Init(_resourcesAllocator);
 
-			index = _shaders.Add(core::move(shaderData));
-			_handleToIndexMap.Add(shader->handle, index);
+			handle = _shaders.Add(core::move(shaderData));
+			_handleToIndexMap.Add(shader->handle, handle);
 		}
 		
 
 		// @TODO FIX this
 
-		core::HashMap<UniformData>& uniformMap = _shaders.Get(index).uniformData;
+		core::HashMap<UniformData>& uniformMap = _shaders.Get(handle).uniformData;
 
 		i32 count = gl::uniform::Count(program);
 		for (i32 i = 0; i < count; ++i) {
@@ -453,7 +458,7 @@ namespace gl {
 	}
 
 	//---------------------------------------------------------------------------
-	void GLRenderDevice::AllocateTexture(const render::Texture* texture) {
+	void GLRenderDevice::AllocateTexture(const Texture* texture) {
 		ASSERT(!_handleToIndexMap.Find(texture->handle));
 
 		u32 glID = gl::texture::Create();
@@ -463,33 +468,33 @@ namespace gl {
 		gl::texture::SetData(texture->data, texture->width, texture->height, texture->mipmaps, texture->format);
 		gl::texture::Unbind();
 
-		u32 index = _textures.Add(glID);
-		_handleToIndexMap.Add(texture->handle, index);
+		core::Handle handle = _textures.Add(glID);
+		_handleToIndexMap.Add(texture->handle, handle);
 	}
 
 	//---------------------------------------------------------------------------
-	void GLRenderDevice::AllocateVertexBuffer(const render::VertexBuffer* vb) {
+	void GLRenderDevice::AllocateVertexBuffer(const VertexBuffer* vb) {
 		ASSERT(!_handleToIndexMap.Find(vb->handle));
 
 		u32 glID;
-		gl::vertex::CreateBuffers(1, &glID);
+		gl::vertex::CreateBuffers(1, (u32*) &glID);
 		gl::vertex::BindArrayBuffer(glID);
 
-		if (vb->bufferType == render::BufferType::STATIC) {
+		if (vb->bufferType == BufferType::STATIC) {
 			gl::vertex::ArrayBufferStaticData(vb->data, vb->dataSize);
 		}
-		else if (vb->bufferType == render::BufferType::DYNAMIC_UPDATE) {
+		else if (vb->bufferType == BufferType::DYNAMIC_UPDATE) {
 			gl::vertex::ArrayBufferDynamicData(vb->data, vb->dataSize);
 		}
 
-		u32 index = _vertexBuffers.Add(glID);
-		_handleToIndexMap.Add(vb->handle, index);
+		core::Handle handle = _vertexBuffers.Add(glID);
+		_handleToIndexMap.Add(vb->handle, handle);
 
 		gl::vertex::UnbindArrayBuffer();
 	}
 
 	//---------------------------------------------------------------------------
-	void GLRenderDevice::AllocateVertexDescription(const render::VertexDescription* vbd) {
+	void GLRenderDevice::AllocateVertexDescription(const VertexDescription* vbd) {
 		ASSERT(!_handleToIndexMap.Find(vbd->handle));
 		// @TODO? current requirement: everything mentioned by vbd has to be already in GPU -> maybe rework
 
@@ -497,41 +502,40 @@ namespace gl {
 		gl::vertex::CreateArrayObjects(1, &glID);
 		gl::vertex::BindArrayObject(glID);
 
-		u64 ibh = vbd->indexBufferHandle;
 		if (vbd->hasIndexBuffer) {
-			u32* index = _handleToIndexMap.Find(vbd->handle);
-			u32 ibID = _indexBuffers.Get(*index);
+			core::Handle* handle = _handleToIndexMap.Find(vbd->indexBufferHandle);
+			u32 ibID = _indexBuffers.Get(*handle);
 			gl::vertex::BindIndexArrayBuffer(ibID);
 		}
 
 		u64 lastVbh = U64MAX;
 		u32 vbID;
 		for (u32 i = 0; i < vbd->attributesCount; ++i) {
-			const render::VertexAttribute* attribute = &vbd->attributes[i];
+			const VertexAttribute* attribute = &vbd->attributes[i];
 
 			u64 vbh = attribute->vertexBufferHandle;
 			if (vbh != lastVbh) {
-				u32* index = _handleToIndexMap.Find(vbd->handle);
-				u32 newVbID = _vertexBuffers.Get(*index);
+				core::Handle* handle = _handleToIndexMap.Find(attribute->vertexBufferHandle);
+				u32 newVbID = _vertexBuffers.Get(*handle);
 
 				vbID = newVbID;
 				gl::vertex::BindArrayBuffer(vbID);
 			}
 
 			switch (attribute->type) {
-			case render::VertexAttributeType::F32: 
+			case VertexAttributeType::F32: 
 				gl::vertex::EnableAttributeArray(attribute->index);
 				gl::vertex::AttributePointerFloat(attribute->index, 1, attribute->stride, attribute->offset, attribute->normalize);
 				if (attribute->divisor > 0)
 					gl::vertex::AttributeDivisor(attribute->index, attribute->divisor);
 				break;
-			case render::VertexAttributeType::V2:
+			case VertexAttributeType::V2:
 				gl::vertex::EnableAttributeArray(attribute->index);
 				gl::vertex::AttributePointerFloat(attribute->index, 2, attribute->stride, attribute->offset, attribute->normalize);
 				if (attribute->divisor > 0)
 					gl::vertex::AttributeDivisor(attribute->index, attribute->divisor);
 				break;
-			case render::VertexAttributeType::M4:
+			case VertexAttributeType::M4:
 				for (u32 i = 0; i < 4; ++i) {
 					u32 index = attribute->index + i;
 					gl::vertex::EnableAttributeArray(index + i);
@@ -550,99 +554,97 @@ namespace gl {
 		//gl::vertex::UnbindArrayBuffer();
 		gl::vertex::UnbindArrayObject();
 		
-		u32 index = _vertexDescriptions.Add(glID);
-		_handleToIndexMap.Add(vbd->handle, index);
+		_handleToIndexMap.Add(vbd->handle, _vertexDescriptions.Add(glID));
 	}
 
 	//---------------------------------------------------------------------------
-	void GLRenderDevice::AllocateIndexBuffer(const render::IndexBuffer* ib) {
+	void GLRenderDevice::AllocateIndexBuffer(const IndexBuffer* ib) {
 		ASSERT(!_handleToIndexMap.Find(ib->handle));
 
 		u32 glID;
-		gl::vertex::CreateBuffers(1, &glID);
+		gl::vertex::CreateBuffers(1, (u32*) &glID);
 		gl::vertex::BindIndexArrayBuffer(glID);
 
-		if (ib->bufferType == render::BufferType::STATIC) {
+		if (ib->bufferType == BufferType::STATIC) {
 			gl::vertex::IndexArrayBufferStaticData(ib->data, ib->dataSize);
 		}
-		else if (ib->bufferType == render::BufferType::DYNAMIC_UPDATE) {
+		else if (ib->bufferType == BufferType::DYNAMIC_UPDATE) {
 			gl::vertex::IndexArrayBufferDynamicData(ib->data, ib->dataSize);
 		}
 
-		u32 index = _indexBuffers.Add(glID);
-		_handleToIndexMap.Add(ib->handle, index);
+		_handleToIndexMap.Add(ib->handle, _indexBuffers.Add(glID));
 
 		gl::vertex::UnbindIndexBuffer();
 	}
 
 	//---------------------------------------------------------------------------
-	void GLRenderDevice::DeallocateShader(const render::Resource* shader) {
-		u32* index = _handleToIndexMap.Find(shader->handle);
-		ASSERT(index);
+	void GLRenderDevice::DeallocateShader(const Resource* shader) {
+		core::Handle* handle = _handleToIndexMap.Find(shader->handle);
+		ASSERT(handle);
 
-		if (index) {
-			ShaderData& shaderData = _shaders.Get(*index);
+		if (handle) {
+			ShaderData& shaderData = _shaders.Get(*handle);
 
 			gl::program::Delete(shaderData.shader);
 
-			_handleToIndexMap.Remove(shader->handle);
-			_shaders.Remove(*index);
+			_handleToIndexMap.SwapRemove(shader->handle);
+			_shaders.Remove(*handle);
 		}
 	}
 
 	//---------------------------------------------------------------------------
-	void GLRenderDevice::DeallocateTexture(const render::Resource* texture) {
-		u32* index = _handleToIndexMap.Find(texture->handle);
-		ASSERT(index);
+	void GLRenderDevice::DeallocateTexture(const Resource* texture) {
+		core::Handle* handle = _handleToIndexMap.Find(texture->handle);
+		ASSERT(handle);
 
-		if (index) {
-			u32 glID = _textures.Get(*index);
+		if (handle) {
+			u32 glID = _textures.Get(*handle);
 			gl::program::Delete(glID);
 
-			_handleToIndexMap.Remove(texture->handle);
-			_textures.Remove(*index);
+			_handleToIndexMap.SwapRemove(texture->handle);
+			_textures.Remove(*handle);
 		}
 	}
 
 	//---------------------------------------------------------------------------
-	void GLRenderDevice::DeallocateVertexBuffer(const render::Resource* vb) {
-		u32* index = _handleToIndexMap.Find(vb->handle);
-		ASSERT(index);
+	void GLRenderDevice::DeallocateVertexBuffer(const Resource* vb) {
+		core::Handle* handle = _handleToIndexMap.Find(vb->handle);
+		ASSERT(handle);
 
-		if (index) {
-			u32 glID = _vertexBuffers.Get(*index);
+		if (handle) {
+			u32 glID = _vertexBuffers.Get(*handle);
 			gl::vertex::DeleteBuffers(&glID, 1);
 
-			_handleToIndexMap.Remove(vb->handle);
-			_vertexBuffers.Remove(*index);
+			_handleToIndexMap.SwapRemove(vb->handle);
+			_vertexBuffers.Remove(*handle);
 		}
 	}
 
 	//---------------------------------------------------------------------------
-	void GLRenderDevice::DeallocateVertexInformation(const render::Resource* vbi) {
-		u32* index = _handleToIndexMap.Find(vbi->handle);
-		ASSERT(index);
+	void GLRenderDevice::DeallocateVertexInformation(const Resource* vbi) {
+		core::Handle* handle = _handleToIndexMap.Find(vbi->handle);
+		ASSERT(handle);
 
-		if (index) {
-			u32 glID = _vertexDescriptions.Get(*index);
+		if (handle) {
+			u32 glID = _vertexDescriptions.Get(*handle);
 			gl::vertex::DeleteArrayObjects(&glID, 1);
 
-			_handleToIndexMap.Remove(vbi->handle);
-			_vertexDescriptions.Remove(*index);
+			_handleToIndexMap.SwapRemove(vbi->handle);
+			_vertexDescriptions.Remove(*handle);
 		}
 	}
 
 	//---------------------------------------------------------------------------
-	void GLRenderDevice::DeallocateIndexBuffer(const render::Resource* ib) {
-		u32* index = _handleToIndexMap.Find(ib->handle);
-		ASSERT(index);
+	void GLRenderDevice::DeallocateIndexBuffer(const Resource* ib) {
+		core::Handle* handle = _handleToIndexMap.Find(ib->handle);
+		ASSERT(handle);
 
-		if (index) {
-			u32 glID = _indexBuffers.Get(*index);
+		if (handle) {
+			u32 glID = _indexBuffers.Get(*handle);
 			gl::vertex::DeleteBuffers(&glID, 1);
 
-			_handleToIndexMap.Remove(ib->handle);
-			_indexBuffers.Remove(*index);
+			_handleToIndexMap.SwapRemove(ib->handle);
+			_indexBuffers.Remove(*handle);
 		}
 	}
 }

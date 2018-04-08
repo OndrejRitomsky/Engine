@@ -1,6 +1,6 @@
 #include "SpinLock.h"
 
-#include <utility>
+
 
 namespace core {
 	//---------------------------------------------------------------------------

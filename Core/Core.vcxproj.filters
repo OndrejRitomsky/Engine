@@ -1,58 +1,60 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="Utility.h" />
     <ClInclude Include="Algorithm\Hash.h" />
     <ClInclude Include="Collection\Array.h" />
     <ClInclude Include="Collection\Buffer.h" />
     <ClInclude Include="Collection\Function.h" />
     <ClInclude Include="Collection\HandleMap.h" />
     <ClInclude Include="Collection\HashMap.h" />
-    <ClInclude Include="Collection\String.h" />
     <ClInclude Include="Parallel\Collection\ThreadSafeFixedQueue.h" />
     <ClInclude Include="Parallel\Locks\LockUtil.h" />
     <ClInclude Include="Parallel\Locks\SpinLock.h" />
     <ClInclude Include="Parallel\Thread.h" />
-    <ClInclude Include="CoreAssert.h" />
-    <ClInclude Include="CoreTypes.h" />
-    <ClInclude Include="Types.h" />
-    <ClInclude Include="Collection\Color.h" />
     <ClInclude Include="Collection\LookupArray.h" />
-    <ClInclude Include="Collection\Base\LookupArrayBase.h" />
-    <ClInclude Include="Allocator\StackAllocator.h" />
-    <ClInclude Include="Allocator\LinearAllocator.h" />
     <ClInclude Include="Allocator\IAllocator.h" />
     <ClInclude Include="Allocator\HeapAllocator.h" />
     <ClInclude Include="Allocator\BuddyAllocator.h" />
     <ClInclude Include="TagAllocator\SingleTagProxyAllocator.h" />
-    <ClInclude Include="TagAllocator\AllocationTag.h" />
     <ClInclude Include="TagAllocator\SafeTaggedBlockAllocator.h" />
-    <ClInclude Include="Memory\Pointer.h" />
-    <ClInclude Include="Memory\Type.h" />
-    <ClInclude Include="Allocator\Reallocation.h" />
     <ClInclude Include="Parallel\JobPool.h" />
     <ClInclude Include="Collection\Base\HashMapBase.h" />
+    <ClInclude Include="Collection\Base\HandleMapBase.h" />
+    <ClInclude Include="Common\Utility.h" />
+    <ClInclude Include="Common\Assert.h" />
+    <ClInclude Include="Common\Handle.h" />
+    <ClInclude Include="Common\Pointer.h" />
+    <ClInclude Include="Common\TypeInfo.h" />
+    <ClInclude Include="Common\TypeLimits.h" />
+    <ClInclude Include="Common\Types.h" />
+    <ClInclude Include="Common\Placement.h" />
+    <ClInclude Include="Collection\Base\InPlaceLinkedList.h" />
+    <ClInclude Include="Algorithm\Memory.h" />
+    <ClInclude Include="Algorithm\Move.h" />
+    <ClInclude Include="TagAllocator\ITagAllocator.h" />
+    <ClInclude Include="TagAllocator\MemTag.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Algorithm\Hash.cpp" />
     <ClCompile Include="Collection\Buffer.cpp" />
-    <ClCompile Include="Collection\String.cpp" />
     <ClCompile Include="Parallel\Locks\SpinLock.cpp" />
     <ClCompile Include="Parallel\Thread.cpp" />
-    <ClCompile Include="Collection\Base\LookupArrayBase.cpp" />
-    <ClCompile Include="Allocator\StackAllocator.cpp" />
-    <ClCompile Include="Allocator\LinearAllocator.cpp" />
     <ClCompile Include="Allocator\HeapAllocator.cpp" />
     <ClCompile Include="Allocator\BuddyAllocator.cpp" />
     <ClCompile Include="TagAllocator\SafeTaggedBlockAllocator.cpp" />
     <ClCompile Include="TagAllocator\SingleTagProxyAllocator.cpp" />
     <ClCompile Include="Parallel\JobPool.cpp" />
     <ClCompile Include="Collection\Base\HashMapBase.cpp" />
+    <ClCompile Include="Collection\Base\HandleMapBase.cpp" />
+    <ClCompile Include="Collection\Base\InPlaceLinkedList.cpp" />
+    <ClCompile Include="Algorithm\Memory.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Collection\LookupArray.inl" />
     <None Include="Allocator\IAllocator.inl" />
     <None Include="Collection\Array.inl" />
     <None Include="Collection\HashMap.inl" />
+    <None Include="Collection\HandleMap.inl" />
+    <None Include="TagAllocator\ITagAllocator.inl" />
   </ItemGroup>
 </Project>

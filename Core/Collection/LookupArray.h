@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Core/Types.h"
+#include "Core/Common/Types.h"
+#include "Core/Common/Handle.h"
 
-#include "Core/Collection/Base/LookupArrayBase.h"
+#include "Core/Collection/Base/InPlaceLinkedList.h"
 
 
 namespace core {
@@ -13,6 +14,8 @@ namespace core {
 	// Doesnt support clear, doesnt know what is hole (external keys must be held)
 	// !! Upon destruction array has to empty, implementation does not know where
 	//    holes are and therefore cant call destructors
+	// Sizeof Type has to be >= 8
+
 	template<typename Type>
 	class LookupArray {
 	private:
@@ -25,20 +28,24 @@ namespace core {
 		LookupArray(const LookupArray& oth) = delete;
 		LookupArray& operator=(const LookupArray& rhs) = delete;
 
-		void Init(IAllocator* allocator, u32 capacity);
-		void Remove(u32 index);
+		void Init(IAllocator* allocator, u32 capacity = 0);
+		void Remove(Handle handle);
 
-		const Type& Get(u32 index) const;
-		Type& Get(u32 index);
+		const Type& Get(Handle handle) const;
+		Type& Get(Handle handle);
 
-		u32 Add(const Type& value);
-		u32 Add(Type&& value);
+		Handle Add(const Type& value);
+		Handle Add(Type&& value);
 
 	private:
 		void ReserveCapacity();
 
+		u32 Conversion(Handle handle) const;
+
 	private:
-		LookupArrayBase _base;
+		u32 _count;
+		u32 _capacity;
+		InPlaceLinkedList _linked;
 		IAllocator* _allocator;
 	};
 }

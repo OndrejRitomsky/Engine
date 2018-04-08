@@ -1,50 +1,38 @@
 #pragma once
 
-#include "Core/Types.h"
-#include "Core/CoreTypes.h"
+#include "Core/Common/Types.h"
+#include "Core/Common/TypeLimits.h"
 
 namespace core {
 
-	// !!! Maybe you are looking for HashMap !!!
-
-
-
-	// !!! Dont use this, if you dont understand the implementation
-	// Its helpers for HashMap implementation (so template methods arent big and can be inlined)
-	// Most of the functions leave the state invalid, operations on values (typed) must be done after !!!
-
 	struct HashMapBase {
+		enum { INVALID_INDEX = U32MAX };
+
 		u32 count;
 		u32 capacity;
 
-		void* _data;
-
-		u32* modHashToDataIndex; // extra indirection so data can be contiguous
-
+		u32* indices; // extra indirection so data can be contiguous
 		u32* nexts;
-		core::Hash* keys;
-		void* values;
+		h64* keys;
 	};
 
 	namespace hash_map_base {
-		// Creates hashmapbase and sets pointers correctly taking value alignment into account
-		HashMapBase Create(void* data, u32 capacity, u32 valueAlignment);
+		void Init(HashMapBase* base, void* data, u32 capacity);
 
-		// Adds data to arrays, !! except Values one (have to be done outside (with custruction))
-		// count is not increased
-		bool Add(HashMapBase* base, Hash hash, u32 &outIndex);
+		u32 Find(const HashMapBase* base, h64 hash);
 
-		//---------------------------------------------------------------------------
-		// Removes data from arrays, except values, by swapping with last (if the element wasnt last)
-		// !! values have to be swapped outside (with construction / deconstruction, move)
-		// count is not decreased
-		bool Remove(const HashMapBase* base, Hash hash, u32& outIndex);
+		u32 Add(HashMapBase* base, h64 hash);
 
-		// Returns nullptr if not found or exact aligned addresse if found
-		void* Find(const HashMapBase* base, Hash hash, u32 elementSize);
+		u32 SwapRemove(HashMapBase* base, h64 hash);
 
-		void CopyArrays(HashMapBase* dest, HashMapBase* source);
+		void Clear(HashMapBase* base);
 
-		void MoveyArrays(HashMapBase* dest, HashMapBase& source); 
+		bool IsFull(HashMapBase* base);
+
+		void Copy(HashMapBase* dest, HashMapBase* source);
+
+		void Move(HashMapBase* dest, HashMapBase&& source); 
+
+		u32 SizeRequiredForCapacity(u32 capacity);
 	}
 }

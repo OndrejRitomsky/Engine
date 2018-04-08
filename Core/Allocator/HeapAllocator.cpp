@@ -1,7 +1,7 @@
 #include "HeapAllocator.h"
 
-#include "Core/CoreAssert.h"
-#include "Core/Memory/Pointer.h"
+#include "Core/Common/Assert.h"
+#include "Core/Common/Pointer.h"
 
 #include <cstdio>
 
@@ -11,19 +11,32 @@ namespace core {
 	//---------------------------------------------------------------------------
 	HeapAllocator::HeapAllocator() :
 		_allocationsCount(0) {
+
+		_interface._Allocate = (IAllocator::AllocateFunction) (&HeapAllocator::Allocate);
+		_interface._Deallocate = (IAllocator::DeallocateFunction) (&HeapAllocator::Deallocate);
+		_interface._Deinit = (IAllocator::DeinitFunction) (&HeapAllocator::Deinit);
 	}
 	
 	//---------------------------------------------------------------------------
 	HeapAllocator::~HeapAllocator() {
-		ASSERT(_allocationsCount == 0);
+		Deinit();
 	}
 
 	//---------------------------------------------------------------------------
-	void* HeapAllocator::Allocate(u64 size, u64 allignment) {
-		ASSERT(mem::IsAlignmentPowerOfTwo(allignment));
+	IAllocator* HeapAllocator::Allocator() {
+		return &_interface;
+	}
+
+	//---------------------------------------------------------------------------
+	void* HeapAllocator::Allocate(u64 size, u64 alignment, u64* outAllocated) {
+		ASSERT(mem::IsAlignmentPowerOfTwo(alignment));
 		_allocationsCount++;
 
-		return _aligned_malloc(size, allignment);
+		if (outAllocated) {
+			*outAllocated = size;
+		}
+
+		return _aligned_malloc(size, alignment);
 	}
 
 	//---------------------------------------------------------------------------
@@ -32,5 +45,9 @@ namespace core {
 			_aligned_free(address);
 			_allocationsCount--;
 		}
+	}
+
+	void HeapAllocator::Deinit() {
+		ASSERT(_allocationsCount == 0);
 	}
 }

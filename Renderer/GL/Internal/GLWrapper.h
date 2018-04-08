@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/types.h>
+#include <Core/Common/Types.h>
 #include "Renderer/API/Resources/Texture.h"
 #include "Renderer/API/Resources/Buffer.h"
 

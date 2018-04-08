@@ -59,8 +59,8 @@ namespace render {
 
 		RenderJobCommand* data = (RenderJobCommand*) AddCommandAndReserve(size, jobPackage->sortKey);
 		data->commandType = CommandType::RENDER;
-		//memcpy(&data->renderJobPackage, jobPackage, jobPackage->size);
-		memcpy(&data->jobPackage, jobPackage, sizeof(JobPackage));
+		//Memcpy(&data->renderJobPackage, jobPackage, jobPackage->size);
+		Memcpy(&data->jobPackage, jobPackage, sizeof(JobPackage));
 
 		// job might need fix, but it will probably be outside
 		return &data->jobPackage;
@@ -69,7 +69,7 @@ namespace render {
 	//-------------------------------------------------------------------------
 	char* RenderContext::AddCommandAndData(const void* data, u64 size, SortKey sortKey) {
 		char* resData = AddCommandAndReserve(size, sortKey);
-		memcpy(resData, data, size);
+		Memcpy(resData, data, size);
 		return resData;
 	}
 
