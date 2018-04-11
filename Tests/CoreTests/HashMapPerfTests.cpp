@@ -51,7 +51,7 @@ namespace hashMap_perf_tests {
 		for (int i = 0; i < repeat; ++i) {
 			core::HeapAllocator allocator;
 			core::HashMap<int> map;
-			map.Init(allocator.Allocator());
+			map.Init(&allocator);
 			PerformanceTestStart(testGroup.GetMy());
 			int j = 0;
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
@@ -94,7 +94,7 @@ namespace hashMap_perf_tests {
 			PerformanceTestStart(testGroup.GetMy());
 			core::HeapAllocator allocator;
 			core::HashMap<int> map;
-			map.Init(allocator.Allocator());
+			map.Init(&allocator);
 			int j = 0;
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
 				map.Add(core::ToHash(&sequence[i][key], sizeof(h64)), j * j + i);
@@ -140,7 +140,7 @@ namespace hashMap_perf_tests {
 		for (int i = 0; i < repeat; ++i) {
 			core::HeapAllocator allocator;
 			core::HashMap<int> map;
-			map.Init(allocator.Allocator());
+			map.Init(&allocator);
 			int j = 0;
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
 				map.Add(sequence[i][key], j + j);
@@ -191,7 +191,7 @@ namespace hashMap_perf_tests {
 		for (int i = 0; i < repeat; ++i) {
 			core::HeapAllocator allocator;
 			core::HashMap<int> map;
-			map.Init(allocator.Allocator());
+			map.Init(&allocator);
 			int j = 0;
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
 				map.Add(sequence[i][key], j + j);
@@ -242,7 +242,7 @@ namespace hashMap_perf_tests {
 		for (int i = 0; i < repeat; ++i) {
 			core::HeapAllocator allocator;
 			core::HashMap<int> map;
-			map.Init(allocator.Allocator());
+			map.Init(&allocator);
 			int j = 0;
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
 				map.Add(core::ToHash(&sequence[i][key], sizeof(h64)), j + j);
@@ -298,7 +298,7 @@ namespace hashMap_perf_tests {
 		for (int i = 0; i < repeat; ++i) {
 			core::HeapAllocator allocator;
 			core::HashMap<int> map;
-			map.Init(allocator.Allocator());
+			map.Init(&allocator);
 			int j = 0;
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
 				map.Add(core::ToHash(&sequence[i][key], sizeof(h64)), j + j);
@@ -361,7 +361,7 @@ namespace hashMap_perf_tests {
 		for (int i = 0; i < repeat; ++i) {
 			core::HeapAllocator allocator;
 			core::HashMap<int> map;
-			map.Init(allocator.Allocator());
+			map.Init(&allocator);
 			int j = 0;
 			for (int key = 0, j = 0; key < keys; ++key, ++j)
 				map.Add(core::ToHash(&sequence[i][key], sizeof(h64)), j + j);

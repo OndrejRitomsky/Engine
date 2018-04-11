@@ -27,14 +27,9 @@ namespace eng {
 	void CRenderObjectManager::Init(core::IAllocator* allocator) {
 		_renderObjects.Init(allocator, 128);
 
-		_resourceConstructor._DependenciesCount = (IResourceConstructor::DependenciesCountFunction) (&CRenderObjectManager::DependenciesCount);
-		_resourceConstructor._FillDependencies = (IResourceConstructor::FillDependenciesFunction) (&CRenderObjectManager::FillDependencies);
-		_resourceConstructor._Create = (IResourceConstructor::CreateFunction) (&CRenderObjectManager::Create);
-	}
-
-	//---------------------------------------------------------------------------
-	IResourceConstructor* CRenderObjectManager::ResourceConstructor() {
-		return &_resourceConstructor;
+		_DependenciesCount = static_cast<IResourceConstructor::DependenciesCountFunction>(&CRenderObjectManager::DependenciesCount);
+		_FillDependencies = static_cast<IResourceConstructor::FillDependenciesFunction>(&CRenderObjectManager::FillDependencies);
+		_Create = static_cast<IResourceConstructor::CreateFunction>(&CRenderObjectManager::Create);
 	}
 
 	//---------------------------------------------------------------------------
@@ -66,17 +61,17 @@ namespace eng {
 	}
 
 	//---------------------------------------------------------------------------
-	u32 CRenderObjectManager::DependenciesCount(const RenderObjectDescription* description) {
+	u32 CRenderObjectManager::DependenciesCount(const void* description) {
 		return 0;
 	}
 
 	//---------------------------------------------------------------------------
-	void CRenderObjectManager::FillDependencies(const RenderObjectDescription* description, ResourceDependencyEvent* inOutEvents) {
+	void CRenderObjectManager::FillDependencies(const void* description, ResourceDependencyEvent* inOutEvents) {
 
 	}
 
 	//---------------------------------------------------------------------------
-	void CRenderObjectManager::Create(const RenderObjectDescription* description, const DependencyParams* dependencyParams, Resource& outHandle) {
+	void CRenderObjectManager::Create(const void* description, const DependencyParams* dependencyParams, Resource& outHandle) {
 	//	ASSERT(dependencyParams->dependenciesCount == 2);
 
 

@@ -40,7 +40,7 @@ namespace eng {
 		ASSERT(_state == ModuleState::CREATED);
 		_state = ModuleState::UNINITIALIZED;
 
-		_taggedAllocator = constructor->Construct<core::SafeTaggedBlockAllocator>()->TagAllocator();
+		_taggedAllocator = constructor->Construct<core::SafeTaggedBlockAllocator>();
 		_tagManager = constructor->Construct<CHandleManager>();
 	}
 

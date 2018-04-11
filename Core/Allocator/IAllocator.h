@@ -20,7 +20,8 @@ namespace core {
 		template<typename T>
 		void Destroy(T* object);
 
-	public:
+		// this has to be protected, only valid way to set them is STATIC_CAST from derived class
+	protected:
 		typedef void*(IAllocator::*AllocateFunction)(u64 size, u64 alignment, u64* outAllocated);
 		typedef void(IAllocator::*DeallocateFunction)(void* address);
 		typedef void(IAllocator::*DeinitFunction)();

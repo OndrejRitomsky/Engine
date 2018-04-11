@@ -25,14 +25,9 @@ namespace eng {
 
 		_allocator = allocator;
 
-		_resourceConstructor._DependenciesCount = (IResourceConstructor::DependenciesCountFunction) (&CShaderStageManager::DependenciesCount);
-		_resourceConstructor._FillDependencies = (IResourceConstructor::FillDependenciesFunction) (&CShaderStageManager::FillDependencies);
-		_resourceConstructor._Create = (IResourceConstructor::CreateFunction) (&CShaderStageManager::Create);
-	}
-
-	//---------------------------------------------------------------------------
-	IResourceConstructor* CShaderStageManager::ResourceConstructor() {
-		return &_resourceConstructor;
+		_DependenciesCount = static_cast<IResourceConstructor::DependenciesCountFunction>(&CShaderStageManager::DependenciesCount);
+		_FillDependencies = static_cast<IResourceConstructor::FillDependenciesFunction>(&CShaderStageManager::FillDependencies);
+		_Create = static_cast<IResourceConstructor::CreateFunction>(&CShaderStageManager::Create);
 	}
 
 	//---------------------------------------------------------------------------
@@ -48,18 +43,19 @@ namespace eng {
 	}
 
 	//---------------------------------------------------------------------------
-	u32 CShaderStageManager::DependenciesCount(const ShaderStageDescription* description) {
+	u32 CShaderStageManager::DependenciesCount(const void* description) {
 		return 0;
 	}
 
 	//---------------------------------------------------------------------------
-	void CShaderStageManager::FillDependencies(const ShaderStageDescription* description, ResourceDependencyEvent* inOutEvents) {
+	void CShaderStageManager::FillDependencies(const void* description, ResourceDependencyEvent* inOutEvents) {
 	}
 
 	//---------------------------------------------------------------------------
-	void CShaderStageManager::Create(const ShaderStageDescription* description, const DependencyParams* dependencyParams, Resource& outHandle) {
+	void CShaderStageManager::Create(const void* description, const DependencyParams* dependencyParams, Resource& outHandle) {
+		const ShaderStageDescription* des = static_cast<const ShaderStageDescription*>(description);
 		ShaderStage stage;
-		stage.data = description->data;
+		stage.data = des->data;
 		outHandle = HandleToResource(_shaderStages.Add(stage));
 	}
 }

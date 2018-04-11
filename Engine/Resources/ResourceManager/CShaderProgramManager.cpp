@@ -24,14 +24,9 @@ namespace eng {
 	void CShaderProgramManager::Init(core::IAllocator* allocator) {
 		_shaderPrograms.Init(allocator, 128);
 
-		_resourceConstructor._DependenciesCount = (IResourceConstructor::DependenciesCountFunction) (&CShaderProgramManager::DependenciesCount);
-		_resourceConstructor._FillDependencies = (IResourceConstructor::FillDependenciesFunction) (&CShaderProgramManager::FillDependencies);
-		_resourceConstructor._Create = (IResourceConstructor::CreateFunction) (&CShaderProgramManager::Create);
-	}
-
-	//---------------------------------------------------------------------------
-	IResourceConstructor* CShaderProgramManager::ResourceConstructor() {
-		return &_resourceConstructor;
+		_DependenciesCount = static_cast<IResourceConstructor::DependenciesCountFunction>(&CShaderProgramManager::DependenciesCount);
+		_FillDependencies = static_cast<IResourceConstructor::FillDependenciesFunction>(&CShaderProgramManager::FillDependencies);
+		_Create = static_cast<IResourceConstructor::CreateFunction>(&CShaderProgramManager::Create);
 	}
 
 	//---------------------------------------------------------------------------
@@ -58,21 +53,23 @@ namespace eng {
 
 
 	//---------------------------------------------------------------------------
-	u32 CShaderProgramManager::DependenciesCount(const ShaderProgramDescription* description) {
+	u32 CShaderProgramManager::DependenciesCount(const void* description) {
 		return 2;
 	}
 
 	//---------------------------------------------------------------------------
-	void CShaderProgramManager::FillDependencies(const ShaderProgramDescription* description, ResourceDependencyEvent* inOutEvents) {
-		inOutEvents[0].hash = description->vertexStage;
-		inOutEvents[1].hash = description->fragmentStage;
+	void CShaderProgramManager::FillDependencies(const void* description, ResourceDependencyEvent* inOutEvents) {
+		const ShaderProgramDescription* des = static_cast<const ShaderProgramDescription*>(description);
+
+		inOutEvents[0].hash = des->vertexStage;
+		inOutEvents[1].hash = des->fragmentStage;
 
 		inOutEvents[0].typeID = static_cast<u64>(ResourceType::SHADER_STAGE);
 		inOutEvents[1].typeID = static_cast<u64>(ResourceType::SHADER_STAGE);
 	}
 
 	//---------------------------------------------------------------------------
-	void CShaderProgramManager::Create(const ShaderProgramDescription* description, const DependencyParams* dependencyParams, Resource& outHandle) {
+	void CShaderProgramManager::Create(const void* description, const DependencyParams* dependencyParams, Resource& outHandle) {
 		ASSERT(dependencyParams->dependenciesCount == 2);
 
 		ShaderProgram program;

@@ -17,7 +17,7 @@ namespace eng {
 
 	struct RenderObject;
 	
-	class CRenderObjectManager {
+	class CRenderObjectManager : public IResourceConstructor {
 	public:
 		CRenderObjectManager();
 		~CRenderObjectManager();
@@ -27,8 +27,6 @@ namespace eng {
 
 		void Init(core::IAllocator* allocator);
 
-		IResourceConstructor* ResourceConstructor();
-
 		const RenderObject& GetRenderObject(const Resource& resource) const;
 
 		void RemoveRenderObject(const Resource& resource);
@@ -37,15 +35,11 @@ namespace eng {
 		void OnRenderObjectRegister(const ResourceRegisterEvent* data, u32 eventsCount);
 
 	private:
-		// FACTORY 
-		u32 DependenciesCount(const RenderObjectDescription* description);
-		void FillDependencies(const RenderObjectDescription* description, ResourceDependencyEvent* inOutEvents);
-		void Create(const RenderObjectDescription* description, const DependencyParams* dependencyParams, Resource& outHandle);
-		// FACTORY 
+		u32 DependenciesCount(const void* description);
+		void FillDependencies(const void* description, ResourceDependencyEvent* inOutEvents);
+		void Create(const void* description, const DependencyParams* dependencyParams, Resource& outHandle);
 
 	private:
-		IResourceConstructor _resourceConstructor;
-
 		core::IAllocator* _allocator;
 
 		core::LookupArray<RenderObject> _renderObjects;

@@ -16,7 +16,7 @@ namespace array_tests
 	void ConstructorSizeTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 
 		TestEqual(testGroup, arr.Count(), 0, "Size should be 0, after contruction");
 	}
@@ -25,7 +25,7 @@ namespace array_tests
 	void ConstructorCapacityTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 
 		TestEqual(testGroup, arr.Capacity(), 0, "Capacity should be 0, after contruction");
 	}
@@ -34,7 +34,7 @@ namespace array_tests
 	void CopyConstructorTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 		int n = 12;
 		for (int i = 0; i < 12; ++i) {
 			arr.Push(i);
@@ -51,7 +51,7 @@ namespace array_tests
 	void MoveConstructorTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 		int n = 12;
 		for (int i = 0; i < 12; ++i) {
 			arr.Push(i);
@@ -67,7 +67,7 @@ namespace array_tests
 	void MoveConstructorTest2(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 		const int k = 6;
 		int n[k] = {1, 2, 3, 4, 5, 6};
 		for (int i = 0; i < k; ++i) {
@@ -83,7 +83,7 @@ namespace array_tests
 	void AssignmentOperatorTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 		int n = 12;
 		for (int i = 0; i < 12; ++i) {
 			arr.Push(i);
@@ -99,7 +99,7 @@ namespace array_tests
 	void MoveAssignmentOperatorTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 		int n = 12;
 		for (int i = 0; i < 12; ++i) {
 			arr.Push(i);
@@ -115,7 +115,7 @@ namespace array_tests
 	void MoveAssignmentOperatorTest2(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 		const int k = 3;
 		int n[k] = {1, 2, 3};
 		for (int i = 0; i < k; ++i) {
@@ -131,7 +131,7 @@ namespace array_tests
 	void PushTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 
 		arr.Push(0);
 
@@ -150,7 +150,7 @@ namespace array_tests
 
 		core::HeapAllocator allocator;
 		core::Array<TestStruct> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 
 		TestStruct structs[2];
 		structs[0].a = 5;
@@ -180,7 +180,7 @@ namespace array_tests
 
 		core::HeapAllocator allocator;
 		core::Array<TestStruct> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 
 		TestStruct structs[3];
 		structs[0].a = 42;
@@ -197,7 +197,7 @@ namespace array_tests
 	void TopTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 
 		arr.Push(0);
 
@@ -211,7 +211,7 @@ namespace array_tests
 	void PopTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 
 		arr.Push(0);
 
@@ -240,7 +240,7 @@ namespace array_tests
 
 		core::HeapAllocator allocator;
 		core::Array<Str> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 
 		arr.Push(std::move(Str()));
 		arr[0].counter = &counter;
@@ -262,7 +262,7 @@ namespace array_tests
 
 		core::HeapAllocator allocator;
 		core::Array<Str> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 
 		arr.Push(std::move(Str()));
 		arr[0].counter = &counter;
@@ -281,7 +281,7 @@ namespace array_tests
 	void BracketOperatorTest2(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 		int a = 48;
 		arr.Push(a);
 		TestEqual(testGroup, arr[0], a, "Indexed value should be same as value added");
@@ -291,7 +291,7 @@ namespace array_tests
 	void IsEmptyTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 		arr.Push(3);
 		arr.Pop();
 		TestTrue(testGroup, arr.IsEmpty(), "Should be empty");
@@ -301,7 +301,7 @@ namespace array_tests
 	void CapacityTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 		arr.Push(3);
 		arr.Push(4);
 		arr.Push(5);
@@ -313,7 +313,7 @@ namespace array_tests
 	void CompactTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 
 		for (int i = 0; i < 47; ++i) {
 			arr.Push(i);
@@ -327,7 +327,7 @@ namespace array_tests
 	void ClearTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 
 		for (int i = 0; i < 12; ++i) {
 			arr.Push(i);
@@ -350,7 +350,7 @@ namespace array_tests
 
 		core::HeapAllocator allocator;
 		core::Array<Str> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 		int n = 4;
 		for (int i = 0; i < n; ++i) {
 			arr.Push(std::move(Str()));
@@ -365,7 +365,7 @@ namespace array_tests
 	void FindTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 
 		for (int i = 0; i < 12; ++i) {
 			arr.Push(i * 2);
@@ -381,7 +381,7 @@ namespace array_tests
 	void FindTest2(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 
 		for (int i = 0; i < 5; ++i) {
 			arr.Push(i * 9);
@@ -396,7 +396,7 @@ namespace array_tests
 	void ReserveTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 		unsigned int n = 43;
 		arr.Reserve(n);
 
@@ -407,7 +407,7 @@ namespace array_tests
 	void ReserveTest2(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 		for (int i = 0; i < 10; ++i) {
 			arr.Push(i);
 		}
@@ -422,7 +422,7 @@ namespace array_tests
 	void BeginEndTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 		for (int i = 0; i < 10; ++i) {
 			arr.Push(i);
 		}
@@ -436,7 +436,7 @@ namespace array_tests
 	void CBeginCEndTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::Array<int> arr;
-		arr.Init(allocator.Allocator());
+		arr.Init(&allocator);
 		for (int i = 0; i < 10; ++i) {
 			arr.Push(i);
 		}

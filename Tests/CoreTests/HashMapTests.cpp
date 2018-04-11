@@ -13,7 +13,7 @@ namespace hashMap_tests {
 	void ConstructorSizeTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HashMap<int> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 
 		TestEqual(testGroup, map.Count(), 0, "Size should be 0 after construction");
 	}
@@ -22,7 +22,7 @@ namespace hashMap_tests {
 	void AddTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HashMap<int> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 
 		int a = 32;
 		map.Add(core::ToHash(&a, sizeof(int)), a);
@@ -38,7 +38,7 @@ namespace hashMap_tests {
 	void FindTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HashMap<int> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 
 		int e = 32;
 		h64 hash = core::ToHash(&e, sizeof(int));
@@ -54,7 +54,7 @@ namespace hashMap_tests {
 	void FindTest2(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HashMap<int> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 
 		int a = 99;
 		h64 hash = core::ToHash(&a, sizeof(int));
@@ -69,7 +69,7 @@ namespace hashMap_tests {
 	void RemoveTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HashMap<int> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 
 		int a = 99;
 		h64 hash = core::ToHash(&a, sizeof(int));
@@ -83,7 +83,7 @@ namespace hashMap_tests {
 	void RemoveTest2(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HashMap<int> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 
 		int a = 99;
 		h64 hash = core::ToHash(&a, sizeof(int));
@@ -96,7 +96,7 @@ namespace hashMap_tests {
 	void Iterator(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HashMap<int> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 		for (int i = 0; i < 8; ++i) {
 			h64 hash = core::ToHash(&i, sizeof(int));
 			map.Add(hash, i);
@@ -110,7 +110,7 @@ namespace hashMap_tests {
 	void ConstIterator(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HashMap<int> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 		for (int i = 0; i < 11; ++i) {
 			h64 hash = core::ToHash(&i, sizeof(int));
 			map.Add(hash, i);
@@ -124,7 +124,7 @@ namespace hashMap_tests {
 	void ConstKeyValueIterator(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HashMap<int> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 
 		const int n = 2;
 		int values[n];
@@ -155,7 +155,7 @@ namespace hashMap_tests {
 
 		core::HeapAllocator allocator;
 		core::HashMap<Str> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 
 		const int N = 10;
 		h64 hashes[N];
@@ -193,7 +193,7 @@ namespace hashMap_tests {
 
 		core::HeapAllocator allocator;
 		core::HashMap<Str> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 
 		const int N = 40;
 		h64 hashes[N];

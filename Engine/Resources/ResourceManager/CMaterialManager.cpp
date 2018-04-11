@@ -26,31 +26,13 @@ namespace eng {
 	//---------------------------------------------------------------------------
 	void CMaterialManager::Init(core::IAllocator* allocator) {
 		_materials.Init(allocator, 128);
-		_materialTemplates.Init(allocator, 128);
 
 		_allocator = allocator;
 
-		_resourceConstructor._DependenciesCount = (IResourceConstructor::DependenciesCountFunction) (&CMaterialManager::DependenciesCount);
-		_resourceConstructor._FillDependencies = (IResourceConstructor::FillDependenciesFunction) (&CMaterialManager::FillDependencies);
-		_resourceConstructor._Create = (IResourceConstructor::CreateFunction) (&CMaterialManager::Create);
-
-		_resourceTemplateConstructor._DependenciesCount = (IResourceConstructor::DependenciesCountFunction) (&CMaterialManager::TemplateDependenciesCount);
-		_resourceTemplateConstructor._FillDependencies = (IResourceConstructor::FillDependenciesFunction) (&CMaterialManager::TemplateFillDependencies);
-		_resourceTemplateConstructor._Create = (IResourceConstructor::CreateFunction) (&CMaterialManager::TemplateCreate);
+		_DependenciesCount = static_cast<IResourceConstructor::DependenciesCountFunction>(&CMaterialManager::DependenciesCount);
+		_FillDependencies = static_cast<IResourceConstructor::FillDependenciesFunction>(&CMaterialManager::FillDependencies);
+		_Create = static_cast<IResourceConstructor::CreateFunction>(&CMaterialManager::Create);
 	}
-
-
-	//---------------------------------------------------------------------------
-	IResourceConstructor* CMaterialManager::ResourceConstructor() {
-		return &_resourceConstructor;
-	}
-
-
-	//---------------------------------------------------------------------------
-	IResourceConstructor* CMaterialManager::ResourceTemplateConstructor() {
-		return &_resourceTemplateConstructor;
-	}
-
 
 	//---------------------------------------------------------------------------
 	const Material& CMaterialManager::GetMaterial(const Resource& resource) const {
@@ -58,21 +40,10 @@ namespace eng {
 	}
 
 	//---------------------------------------------------------------------------
-	const CMaterialTemplate& CMaterialManager::GetMaterialTemplate(const Resource& resource) const {
-		return _materialTemplates.Get(ResourceToHandle(resource));
-	}
-
-	//---------------------------------------------------------------------------
 	void CMaterialManager::RemoveMaterial(const Resource& resource) {
 		core::Handle handle = ResourceToHandle(resource);
 		_allocator->Deallocate(_materials.Get(handle).textures);
 		_materials.Remove(handle);
-	}
-
-	//---------------------------------------------------------------------------
-	void CMaterialManager::RemoveMaterialTemplate(const Resource& resource) {
-		core::Handle handle = ResourceToHandle(resource);
-		_materialTemplates.Remove(handle);
 	}
 
 	//---------------------------------------------------------------------------
@@ -94,51 +65,21 @@ namespace eng {
 	}
 
 	//---------------------------------------------------------------------------
-	void CMaterialManager::OnMaterialTemplateRegister(const ResourceRegisterEvents* evt) {
-		/*for (u32 i = 0; i < eventsCount; ++i) {
-		  CMaterialTemplate materialTemplate;
-			Memcpy(&materialTemplate, data[i].resource, sizeof(CMaterialTemplate));
-
-			u32 index = _materialTemplates.Add(materialTemplate);
-		}*/
-	}
-
-
-	//---------------------------------------------------------------------------
-	u32 CMaterialManager::DependenciesCount(const MaterialDescription* description) {
+	u32 CMaterialManager::DependenciesCount(const void* description) {
 		return 0;
 	}
 
 	//---------------------------------------------------------------------------
-	void CMaterialManager::FillDependencies(const MaterialDescription* description, ResourceDependencyEvent* inOutEvents) {
+	void CMaterialManager::FillDependencies(const void* description, ResourceDependencyEvent* inOutEvents) {
 
 	}
 
 	//---------------------------------------------------------------------------
-	void CMaterialManager::Create(const MaterialDescription* description, const DependencyParams* dependencyParams, Resource& outHandle) {
+	void CMaterialManager::Create(const void* description, const DependencyParams* dependencyParams, Resource& outHandle) {
 		ASSERT(dependencyParams->dependenciesCount == 2);
 
 
 		//outHandle = HandleToResource(_shaderPrograms.Add(program));
 	}
-
-
-	//---------------------------------------------------------------------------
-	u32 CMaterialManager::TemplateDependenciesCount(const CMaterialTemplate* description) {
-		return 0;
-	}
-
-	//---------------------------------------------------------------------------
-	void CMaterialManager::TemplateFillDependencies(const CMaterialTemplate* description, ResourceDependencyEvent* inOutEvents) {
-
-	}
-
-	//---------------------------------------------------------------------------
-	void CMaterialManager::TemplateCreate(const CMaterialTemplate* description, const DependencyParams* dependencyParams, Resource& outHandle) {
-		//ASSERT(dependencyParams->dependenciesCount == 2);
-
-		//outHandle = HandleToResource(_shaderPrograms.Add(program));
-	}
-
 }
 

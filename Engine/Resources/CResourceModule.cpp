@@ -116,14 +116,13 @@ namespace eng {
 		_meshManager->Init(allocator);
 		_renderObjectManager->Init(allocator);
 
-		_resourcesFactory->RegisterTypeConstructor(static_cast<u64>(ResourceType::MATERIAL), _materialManager->ResourceConstructor());
-		_resourcesFactory->RegisterTypeConstructor(static_cast<u64>(ResourceType::MATERIAL_TEMPLATE), _materialManager->ResourceTemplateConstructor());
-		_resourcesFactory->RegisterTypeConstructor(static_cast<u64>(ResourceType::MESH), _meshManager->ResourceConstructor());
-		_resourcesFactory->RegisterTypeConstructor(static_cast<u64>(ResourceType::RENDER_OBJECT), _renderObjectManager->ResourceConstructor());
-		_resourcesFactory->RegisterTypeConstructor(static_cast<u64>(ResourceType::SHADER_PROGRAM), _shaderProgramManager->ResourceConstructor());
-		_resourcesFactory->RegisterTypeConstructor(static_cast<u64>(ResourceType::SHADER_STAGE), _shaderStageManager->ResourceConstructor());
-		_resourcesFactory->RegisterTypeConstructor(static_cast<u64>(ResourceType::TEXTURE), _textureManager->ResourceConstructor());
-
+		_resourcesFactory->RegisterTypeConstructor(static_cast<u64>(ResourceType::MATERIAL), _materialManager);
+		_resourcesFactory->RegisterTypeConstructor(static_cast<u64>(ResourceType::MATERIAL_TEMPLATE), _materialManager);
+		_resourcesFactory->RegisterTypeConstructor(static_cast<u64>(ResourceType::MESH), _meshManager);
+		_resourcesFactory->RegisterTypeConstructor(static_cast<u64>(ResourceType::RENDER_OBJECT), _renderObjectManager);
+		_resourcesFactory->RegisterTypeConstructor(static_cast<u64>(ResourceType::SHADER_PROGRAM), _shaderProgramManager);
+		_resourcesFactory->RegisterTypeConstructor(static_cast<u64>(ResourceType::SHADER_STAGE), _shaderStageManager);
+		_resourcesFactory->RegisterTypeConstructor(static_cast<u64>(ResourceType::TEXTURE), _textureManager);
 	}
 
 	//---------------------------------------------------------------------------

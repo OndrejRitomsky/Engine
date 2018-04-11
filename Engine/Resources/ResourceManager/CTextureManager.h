@@ -11,7 +11,7 @@ namespace eng {
 	struct TextureDescription;
 	struct ResourceDependencyEvent;
 
-	class CTextureManager {
+	class CTextureManager : public IResourceConstructor {
 	public:
 		CTextureManager();
 		~CTextureManager();
@@ -21,24 +21,17 @@ namespace eng {
 
 		void Init(core::IAllocator* allocator);
 
-		IResourceConstructor* ResourceConstructor();
-
 		const Texture& GetTexture(const Resource& resource) const;
 
 		void RemoveTexture(const Resource& resource);
 
 	private:
-		// FACTORY 
-		u32 DependenciesCount(const TextureDescription* description);
-		void FillDependencies(const TextureDescription* description, ResourceDependencyEvent* inOutEvents);
-		void Create(const TextureDescription* description, const DependencyParams* dependencyParams, Resource& outHandle);
-		// FACTORY 
+		u32 DependenciesCount(const void* description);
+		void FillDependencies(const void* description, ResourceDependencyEvent* inOutEvents);
+		void Create(const void* description, const DependencyParams* dependencyParams, Resource& outHandle);
 
 	private:
-		IResourceConstructor _resourceConstructor;
 		core::IAllocator* _allocator;
 		core::LookupArray<Texture> _textures;
 	};
-
-
 }

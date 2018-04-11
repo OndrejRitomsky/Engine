@@ -3,15 +3,15 @@
 #include "Core/Common/Types.h"
 #include "Core/Common/TypeLimits.h"
 
-#include "Core/TagALlocator/MemTag.h"
-#include "Core/TagALlocator/ITagAllocator.h"
+#include "Core/TagAllocator/MemTag.h"
+#include "Core/TagAllocator/ITagAllocator.h"
 
 namespace core {
 
 	class IAllocator;
 
 	// @TODO its not safe yet
-	class SafeTaggedBlockAllocator {
+	class SafeTaggedBlockAllocator : public ITagAllocator {
 	public:
 		SafeTaggedBlockAllocator();
 		SafeTaggedBlockAllocator(const SafeTaggedBlockAllocator& oth) = delete;
@@ -30,8 +30,6 @@ namespace core {
 		u64 GetBlockSize();
 		u64 GetBlockAlignment();
 
-		ITagAllocator* TagAllocator();
-
 	private:
 		void* AllocateTaggedBlock(MemTag tag);
 		void* AllocateTaggedMultiBlock(MemTag tag, u64 blockCount);
@@ -46,8 +44,6 @@ namespace core {
 		void SetNextFreeIndex(u64 fromIndex, u64 toIndex);
 
 	private:
-		ITagAllocator _interface;
-
 		struct BlockMeta;
 
 		struct BlockInfo {

@@ -24,14 +24,9 @@ namespace eng {
 	void CMeshManager::Init(core::IAllocator* allocator) {
 		_meshes.Init(allocator, 128);
 		_allocator = allocator;
-		_resourceConstructor._DependenciesCount = (IResourceConstructor::DependenciesCountFunction) (&CMeshManager::DependenciesCount);
-		_resourceConstructor._FillDependencies = (IResourceConstructor::FillDependenciesFunction) (&CMeshManager::FillDependencies);
-		_resourceConstructor._Create = (IResourceConstructor::CreateFunction) (&CMeshManager::Create);
-	}
-
-	//---------------------------------------------------------------------------
-	IResourceConstructor* CMeshManager::ResourceConstructor() {
-		return &_resourceConstructor;
+		_DependenciesCount = static_cast<IResourceConstructor::DependenciesCountFunction>(&CMeshManager::DependenciesCount);
+		_FillDependencies = static_cast<IResourceConstructor::FillDependenciesFunction>(&CMeshManager::FillDependencies);
+		_Create = static_cast<IResourceConstructor::CreateFunction>(&CMeshManager::Create);
 	}
 
 	//---------------------------------------------------------------------------
@@ -69,17 +64,17 @@ namespace eng {
 	}
 
 	//---------------------------------------------------------------------------
-	u32 CMeshManager::DependenciesCount(const MeshDescription* description) {
+	u32 CMeshManager::DependenciesCount(const void* description) {
 		return 0;
 	}
 
 	//---------------------------------------------------------------------------
-	void CMeshManager::FillDependencies(const MeshDescription* description, ResourceDependencyEvent* inOutEvents) {
+	void CMeshManager::FillDependencies(const void* description, ResourceDependencyEvent* inOutEvents) {
 
 	}
 
 	//---------------------------------------------------------------------------
-	void CMeshManager::Create(const MeshDescription* description, const DependencyParams* dependencyParams, Resource& outHandle) {
+	void CMeshManager::Create(const void* description, const DependencyParams* dependencyParams, Resource& outHandle) {
 
 
 

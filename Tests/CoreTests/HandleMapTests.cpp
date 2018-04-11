@@ -13,7 +13,7 @@ namespace handleMap_tests {
 	void ConstructorSizeTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HandleMap<int> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 
 		TestEqual(testGroup, map.Count(), 0, "Size should be 0 after construction");
 	}
@@ -22,7 +22,7 @@ namespace handleMap_tests {
 	void ConstructorCapacityTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HandleMap<int> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 
 		TestEqual(testGroup, map.Capacity(), 0, "Capacity should be 0 after construction");
 	}
@@ -31,7 +31,7 @@ namespace handleMap_tests {
 	void AddTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HandleMap<int> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 
 		map.Add(3);
 		map.Add(5);
@@ -44,7 +44,7 @@ namespace handleMap_tests {
 	void GetTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HandleMap<int> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 
 		int v = 3;
 		core::Handle handle = map.Add(v);
@@ -61,7 +61,7 @@ namespace handleMap_tests {
 	void RemoveTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HandleMap<int> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 
 		int v = 13;
 		core::Handle handle = map.Add(v);
@@ -74,7 +74,7 @@ namespace handleMap_tests {
 	void ReserveTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HandleMap<int> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 		int n = 45;
 		map.Reserve(n);
 
@@ -85,7 +85,7 @@ namespace handleMap_tests {
 	void ReserveTest2(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HandleMap<int> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 		for (int i = 0; i < 10; ++i) {
 			map.Add(i);
 		}
@@ -100,7 +100,7 @@ namespace handleMap_tests {
 	void BeginEndTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HandleMap<int> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 		for (int i = 0; i < 8; ++i) {
 			map.Add(i);
 		}
@@ -114,7 +114,7 @@ namespace handleMap_tests {
 	void CBeginCEndTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HandleMap<int> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 		for (int i = 0; i < 8; ++i) {
 			map.Add(i);
 		}
@@ -131,7 +131,7 @@ namespace handleMap_tests {
 	void MultipleTest1(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HandleMap<int> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 
 		const int N = 10;
 		core::Handle handles[N];
@@ -171,7 +171,7 @@ namespace handleMap_tests {
 	void MultipleTest2(test::TestGroup& testGroup) {
 		core::HeapAllocator allocator;
 		core::HandleMap<int> map;
-		map.Init(allocator.Allocator());
+		map.Init(&allocator);
 
 		const int N = 10;
 		core::Handle handles[2 * N];

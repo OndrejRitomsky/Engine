@@ -17,7 +17,7 @@ namespace eng {
 	
 	struct ShaderStageDescription;
 
-	class CShaderStageManager {
+	class CShaderStageManager : public IResourceConstructor {
 	public:
 		CShaderStageManager();
 		~CShaderStageManager();
@@ -27,21 +27,16 @@ namespace eng {
 
 		void Init(core::IAllocator* allocator);
 
-		IResourceConstructor* ResourceConstructor();
-
 		const ShaderStage& GetShaderStage(const Resource& resource) const;
 
 		void RemoveShaderStage(const Resource& resource);
 
 	private:
-		// FACTORY 
-		u32 DependenciesCount(const ShaderStageDescription* description);
-		void FillDependencies(const ShaderStageDescription* description, ResourceDependencyEvent* inOutEvents);
-		void Create(const ShaderStageDescription* description, const DependencyParams* dependencyParams, Resource& outHandle);
-		// FACTORY 
+		u32 DependenciesCount(const void* description);
+		void FillDependencies(const void* description, ResourceDependencyEvent* inOutEvents);
+		void Create(const void* description, const DependencyParams* dependencyParams, Resource& outHandle);
 
 	private:
-		IResourceConstructor _resourceConstructor;
 		core::IAllocator* _allocator;
 		core::LookupArray<ShaderStage> _shaderStages;
 	};

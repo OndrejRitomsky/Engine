@@ -36,7 +36,6 @@ namespace eng {
 		stbi_image_free(texture->data);
 	}
 
-
 	//---------------------------------------------------------------------------
 	CTextureManager::CTextureManager()  {
 	}
@@ -45,20 +44,14 @@ namespace eng {
 	CTextureManager::~CTextureManager() {
 	}
 
-
 	//---------------------------------------------------------------------------
 	void CTextureManager::Init(core::IAllocator* allocator) {
 		_textures.Init(allocator, 128);
 		_allocator = allocator;
 
-		_resourceConstructor._DependenciesCount = (IResourceConstructor::DependenciesCountFunction) (&CTextureManager::DependenciesCount);
-		_resourceConstructor._FillDependencies = (IResourceConstructor::FillDependenciesFunction) (&CTextureManager::FillDependencies);
-		_resourceConstructor._Create = (IResourceConstructor::CreateFunction) (&CTextureManager::Create);
-	}
-
-	//---------------------------------------------------------------------------
-	IResourceConstructor* CTextureManager::ResourceConstructor() {
-		return &_resourceConstructor;
+		_DependenciesCount = static_cast<IResourceConstructor::DependenciesCountFunction>(&CTextureManager::DependenciesCount);
+		_FillDependencies = static_cast<IResourceConstructor::FillDependenciesFunction>(&CTextureManager::FillDependencies);
+		_Create = static_cast<IResourceConstructor::CreateFunction>(&CTextureManager::Create);
 	}
 
 	//---------------------------------------------------------------------------
@@ -74,17 +67,17 @@ namespace eng {
 	}
 
 	//---------------------------------------------------------------------------
-	u32 CTextureManager::DependenciesCount(const TextureDescription* description) {		
+	u32 CTextureManager::DependenciesCount(const void* description) {
 		return 0;
 	}
 
 	//---------------------------------------------------------------------------
-	void CTextureManager::FillDependencies(const TextureDescription* description, ResourceDependencyEvent* inOutEvents) {
+	void CTextureManager::FillDependencies(const void* description, ResourceDependencyEvent* inOutEvents) {
 
 	}
 
 	//---------------------------------------------------------------------------
-	void CTextureManager::Create(const TextureDescription* description, const DependencyParams* dependencyParams, Resource& outHandle) {
+	void CTextureManager::Create(const void* description, const DependencyParams* dependencyParams, Resource& outHandle) {
 		ASSERT(dependencyParams->dependenciesCount == 2);
 
 

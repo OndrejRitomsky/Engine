@@ -18,19 +18,19 @@ namespace eng {
 	struct MaterialDescription;
 	
 
-	class CMaterialManager : public IResourceConstructor {
+	class CMaterialTemplateManager : public IResourceConstructor {
 	public:
-		CMaterialManager();
-		~CMaterialManager();
+		CMaterialTemplateManager();
+		~CMaterialTemplateManager();
 
 		void Init(core::IAllocator* allocator);
 
-		const Material& GetMaterial(const Resource& resource) const;
+		const CMaterialTemplate& GetMaterialTemplate(const Resource& resource) const;
 
-		void RemoveMaterial(const Resource& resource);
+		void RemoveMaterialTemplate(const Resource& resource);
 
 		// data will be copied
-		void OnMaterialRegister(const ResourceRegisterEvents* evt);
+		void OnMaterialTemplateRegister(const ResourceRegisterEvents* evt);
 
 	private:
 		u32 DependenciesCount(const void* description);
@@ -41,6 +41,7 @@ namespace eng {
 		core::IAllocator* _allocator;
 
 		core::LookupArray<Material> _materials;
+		core::LookupArray<CMaterialTemplate> _materialTemplates;
 	};
 
 

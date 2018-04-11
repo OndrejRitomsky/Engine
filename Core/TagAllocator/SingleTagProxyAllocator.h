@@ -9,8 +9,7 @@
 namespace core {
 	class ITagAllocator;
 
-	class SingleTagProxyAllocator
-	{
+	class SingleTagProxyAllocator : public IAllocator {
 	public:
 		SingleTagProxyAllocator();
 		SingleTagProxyAllocator(const SingleTagProxyAllocator& oth) = delete;
@@ -25,8 +24,6 @@ namespace core {
 		void Deinit();
 
 	private:
-		IAllocator _interface;
-
 		ITagAllocator* _backingAllocator;
 		MemTag _tag;
 	};

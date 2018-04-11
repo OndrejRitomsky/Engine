@@ -12,19 +12,14 @@ namespace core {
 	HeapAllocator::HeapAllocator() :
 		_allocationsCount(0) {
 
-		_interface._Allocate = (IAllocator::AllocateFunction) (&HeapAllocator::Allocate);
-		_interface._Deallocate = (IAllocator::DeallocateFunction) (&HeapAllocator::Deallocate);
-		_interface._Deinit = (IAllocator::DeinitFunction) (&HeapAllocator::Deinit);
+		_Allocate = static_cast<IAllocator::AllocateFunction>(&HeapAllocator::Allocate);
+		_Deallocate = static_cast<IAllocator::DeallocateFunction>(&HeapAllocator::Deallocate);
+		_Deinit = static_cast<IAllocator::DeinitFunction>(&HeapAllocator::Deinit);
 	}
 	
 	//---------------------------------------------------------------------------
 	HeapAllocator::~HeapAllocator() {
 		Deinit();
-	}
-
-	//---------------------------------------------------------------------------
-	IAllocator* HeapAllocator::Allocator() {
-		return &_interface;
 	}
 
 	//---------------------------------------------------------------------------

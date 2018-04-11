@@ -24,6 +24,7 @@
     <ClInclude Include="Frame\Frame.h" />
     <ClInclude Include="Frame\CFrameModule.h" />
     <ClInclude Include="Resources\ResourceInternalEvent.h" />
+    <ClInclude Include="Resources\ResourceManager\CMaterialTemplateManager.h" />
     <ClInclude Include="Resources\ResourceManager\IResourceConstructor.h" />
     <ClInclude Include="Resources\Manager\CResourcesManager.h" />
     <ClInclude Include="Resources\ResourceManager\CRenderObjectManager.h" />
@@ -246,6 +247,7 @@
     <ClCompile Include="Frame\Frame.cpp" />
     <ClCompile Include="Frame\CFrameModule.cpp" />
     <ClCompile Include="Resources\Manager\CResourcesManager.cpp" />
+    <ClCompile Include="Resources\ResourceManager\CMaterialTemplateManager.cpp" />
     <ClCompile Include="Resources\ResourceManager\CRenderObjectManager.cpp" />
     <ClCompile Include="RenderPipeline\Manager\CRenderResourceManager.cpp" />
     <ClCompile Include="RenderPipeline\Manager\CRenderPipeline.cpp" />

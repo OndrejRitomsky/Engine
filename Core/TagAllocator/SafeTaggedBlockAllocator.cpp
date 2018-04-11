@@ -57,8 +57,7 @@ namespace core {
 		_freeFirst(INVALID_INDEX),
 		_blockSize(0),
 		_blockAlignment(0),
-		_invalidTag(0),
-		_interface{0} {
+		_invalidTag(0) {
 
 		_data.size = 0;
 		_data.capacity = 0;
@@ -87,9 +86,9 @@ namespace core {
 		ASSERT(backingAllocator);
 		ASSERT(blockSize >= sizeof(FreeBlockHeader));
 
-		_interface._AllocateWithTag = (ITagAllocator::AllocateWithTagFunctin) (&SafeTaggedBlockAllocator::AllocateWithTag);
-		_interface._DeallocateAllWithTag = (ITagAllocator::DeallocateAllWithTagFunction) (&SafeTaggedBlockAllocator::DeallocateAllWithTag);
-		_interface._Deinit = (ITagAllocator::DeinitFunction) (&SafeTaggedBlockAllocator::Deinit);
+		_AllocateWithTag = static_cast<ITagAllocator::AllocateWithTagFunctin>(&SafeTaggedBlockAllocator::AllocateWithTag);
+		_DeallocateAllWithTag = static_cast<ITagAllocator::DeallocateAllWithTagFunction>(&SafeTaggedBlockAllocator::DeallocateAllWithTag);
+		_Deinit = static_cast<ITagAllocator::DeinitFunction>(&SafeTaggedBlockAllocator::Deinit);
 	}
 
 	//-------------------------------------------------------------------------
@@ -389,10 +388,5 @@ namespace core {
 	//-------------------------------------------------------------------------
 	u64 SafeTaggedBlockAllocator::GetBlockAlignment() {
 		return _blockAlignment;
-	}
-
-	//-------------------------------------------------------------------------
-	ITagAllocator* SafeTaggedBlockAllocator::TagAllocator() {
-		return &_interface;
 	}
 }

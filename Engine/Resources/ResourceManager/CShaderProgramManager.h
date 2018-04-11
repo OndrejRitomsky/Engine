@@ -18,7 +18,7 @@ namespace eng {
 	struct ShaderProgram;
 	struct ShaderProgramDescription;
 	
-	class CShaderProgramManager {
+	class CShaderProgramManager : public IResourceConstructor{
 	public:
 		CShaderProgramManager();
 		~CShaderProgramManager();
@@ -28,8 +28,6 @@ namespace eng {
 
 		void Init(core::IAllocator* allocator);
 
-		IResourceConstructor* ResourceConstructor();
-
 		const ShaderProgram& GetShaderProgram(const Resource& resource) const;
 		
 		void RemoveShaderProgram(const Resource& handle);
@@ -38,15 +36,11 @@ namespace eng {
 		void OnShaderProgramRegister(const ResourceRegisterEvent* data, u32 eventsCount);
 
 	private:
-		// FACTORY 
-		u32 DependenciesCount(const ShaderProgramDescription* description);
-		void FillDependencies(const ShaderProgramDescription* description, ResourceDependencyEvent* inOutEvents);
-		void Create(const ShaderProgramDescription* description, const DependencyParams* dependencyParams, Resource& outHandle);
-		// FACTORY 
+		u32 DependenciesCount(const void* description);
+		void FillDependencies(const void* description, ResourceDependencyEvent* inOutEvents);
+		void Create(const void* description, const DependencyParams* dependencyParams, Resource& outHandle);
 
 	private:
-		IResourceConstructor _resourceConstructor;
-
 		core::IAllocator* _allocator;
 
 		core::LookupArray<ShaderProgram> _shaderPrograms;

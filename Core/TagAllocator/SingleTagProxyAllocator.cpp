@@ -12,9 +12,9 @@ namespace core {
 		_backingAllocator(nullptr),
 		_tag(0) {
 
-		_interface._Allocate = (IAllocator::AllocateFunction) (&SingleTagProxyAllocator::Allocate);
-		_interface._Deallocate = (IAllocator::DeallocateFunction) (&SingleTagProxyAllocator::Deallocate);
-		_interface._Deinit = (IAllocator::DeinitFunction) (&SingleTagProxyAllocator::Deinit);
+		_Allocate = static_cast<IAllocator::AllocateFunction>(&SingleTagProxyAllocator::Allocate);
+		_Deallocate = static_cast<IAllocator::DeallocateFunction>(&SingleTagProxyAllocator::Deallocate);
+		_Deinit = static_cast<IAllocator::DeinitFunction>(&SingleTagProxyAllocator::Deinit);
 	}
 
 	//---------------------------------------------------------------------------

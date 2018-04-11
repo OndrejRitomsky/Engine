@@ -25,7 +25,7 @@ namespace eng {
 
 		void Create(const void* data, const DependencyParams* dependencyParams, void*& outResource);
 
-	public:
+	protected:
 		typedef u32(IResourceConstructor::*DependenciesCountFunction)(const void* resourceDescription);
 		typedef void(IResourceConstructor::*FillDependenciesFunction)(const void* resourceDescription, ResourceDependencyEvent* outEvents);
 		typedef void(IResourceConstructor::*CreateFunction)(const void* resourceDescription, const DependencyParams* dependencyParams, void*& outResource);
