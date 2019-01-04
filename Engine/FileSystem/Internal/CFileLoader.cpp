@@ -1,10 +1,11 @@
 #include "CFileLoader.h"
 
-#include <Core/Common/Assert.h>
-#include <Core/Allocator/IAllocator.h>
-#include <Core/Allocator/IAllocator.inl>
-#include <Core/Collection/HashMap.inl>
-#include <Core/Collection/HandleMap.inl>
+#include <core/common/debug.h>
+#include <core/allocator/allocate.h>
+#include <core/collection/hashmap.inl>
+#include <core/collection/handlemap.inl>
+
+#include <stdio.h>
 
 namespace eng {
 	using namespace core;
@@ -17,19 +18,19 @@ namespace eng {
 		_allocator(nullptr),
 		_currentId(0),
 		_loadingCount(0),
-		_queueHandle(win::MakeInvalidFileHandle()) {
+		_queueHandle(core::MakeInvalidFileHandle()) {
 	}
 
 	//---------------------------------------------------------------------------
 	CFileLoader::~CFileLoader() {
 		// clean rest of the files!!!!!!!!!!!!!!!!!
 
-		win::CompletionPortClose(_queueHandle);
+		core::CompletionPortClose(_queueHandle);
 	}
 
 	//---------------------------------------------------------------------------
 	void CFileLoader::Init(IAllocator* allocator) {
-		_queueHandle = win::CompletionPortCreate(1);
+		_queueHandle = core::CompletionPortCreate(1);
 		_allocator = allocator;
 		_idToHandleMap.Init(allocator);
 		_ids.Init(allocator);
@@ -38,19 +39,19 @@ namespace eng {
 	//---------------------------------------------------------------------------
 	void CFileLoader::Update() {
 
-		win::CompletionKey id;
+		core::CompletionKey id;
 
-		win::CompletionPortStatus result = win::CompletionPortStatus::Ok;
+		core::CompletionPortStatus result = core::CompletionPortStatus::Ok;
 
 		while (true) {
-			win::Overlapped* overlapped;
+			core::Overlapped* overlapped;
 
-			result = win::CompletionPortQuery(_queueHandle, id, overlapped);
+			result = core::CompletionPortQuery(_queueHandle, id, overlapped);
 
-			if (result == win::CompletionPortStatus::Empty)
+			if (result == core::CompletionPortStatus::Empty)
 				break;
 
-			_allocator->Deallocate(overlapped);
+			Deallocate(_allocator, overlapped);
 
 			Handle* handle = _idToHandleMap.Find(id);
 
@@ -61,10 +62,10 @@ namespace eng {
 
 			Entry& entry = _ids.Get(*handle);
 
-			if (result == win::CompletionPortStatus::Error)
+			if (result == core::CompletionPortStatus::Error)
 				entry.status = Status::Error;
 
-			if (result == win::CompletionPortStatus::Ok)
+			if (result == core::CompletionPortStatus::Ok)
 				entry.status = Status::Ok;
 		}
 	}
@@ -201,8 +202,8 @@ namespace eng {
 
 
 
-		if (win::IsFileHandleValid(entry.fileHandle)) {
-			win::FileClose(entry.fileHandle);
+		if (core::IsFileHandleValid(entry.fileHandle)) {
+			core::FileClose(entry.fileHandle);
 
 			printf("asyncload returning handle %d \n", entry.id);
 			_idToHandleMap.SwapRemove(entry.id);
@@ -217,34 +218,34 @@ namespace eng {
 	CFileLoader::Entry CFileLoader::StartLoading(const Entry& entry) {
 		Entry newEntry = entry;
 		newEntry.status = Status::Error;
-		newEntry.fileHandle = win::MakeInvalidFileHandle();
+		newEntry.fileHandle = core::MakeInvalidFileHandle();
 
-		win::FileHandle fileHandle = win::FileOpenAsync(newEntry.path);
+		core::FileHandle fileHandle = core::FileOpenAsync(newEntry.path);
 
-		if (!win::IsFileHandleValid(fileHandle))
+		if (!core::IsFileHandleValid(fileHandle))
 			return newEntry;
 
-		u32 size = win::FileSize(fileHandle);
+		u32 size = core::FileSize(fileHandle);
 
 		if (size == 0) {
-			win::FileClose(fileHandle);
+			core::FileClose(fileHandle);
 			return newEntry;
 		}
 
-		win::CompletionIOParams params;
+		core::CompletionIOParams params;
 		params.id = newEntry.id;
 		params.file = fileHandle;
 		params.completionPort = _queueHandle;
-		params.overlapped = _allocator->Make<win::Overlapped>(); // internal stuff with our allocator
+		params.overlapped = (core::Overlapped*) Allocate(_allocator, sizeof(core::Overlapped), alignof(core::Overlapped)); // internal stuff with our allocator
 
 		// asymetric allocation BLEH
-		char* data = (char*) newEntry.allocator->Allocate(size + 1, alignof(char)); // external stuff with input allocator
+		char* data = (char*) Allocate(newEntry.allocator, size + 1, alignof(char)); // external stuff with input allocator
 		data[size] = 0;
 
-		win::Error error = win::FileReadAsync(params, data, size);
+		core::Error error = core::FileReadAsync(params, data, size);
 
-		if (error != win::Error::Ok) {
-			win::FileClose(fileHandle);
+		if (error != core::Error::Ok) {
+			core::FileClose(fileHandle);
 			return newEntry;
 		}
 

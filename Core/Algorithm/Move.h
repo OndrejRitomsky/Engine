@@ -1,13 +1,13 @@
 #pragma once
 
-#include <utility>
+//#include <utility>
 
 namespace core {
-	using std::forward;
-	using std::move;
+//	using std::forward;
+	//using std::move;
 
 
-/*	template<typename T>
+	template<typename T>
 	struct RemoveReference;
 
 	template<typename T>
@@ -32,7 +32,5 @@ namespace core {
 	template<typename T>
 	typename T&& forward(typename RemoveReference<T>::Type&& t) {
 		return static_cast<T&&>(t);
-	}*/
-
-
+	}
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Core/Common/Types.h"
+#include "../../common/types.h"
 
 namespace core {
 	// Static Array with holes

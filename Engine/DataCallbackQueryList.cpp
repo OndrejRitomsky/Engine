@@ -1,8 +1,8 @@
 #include "DataCallbackQueryList.h"
 
-#include <Core/Allocator/IAllocator.h>
-#include <Core/Algorithm/Hash.h>
-#include <Core/Collection/HashMap.inl>
+//#include <core/allocator/iallocator.h>
+#include <core/algorithm/hash.h>
+#include <core/collection/hashmap.inl>
 
 
 namespace eng {
@@ -16,7 +16,7 @@ namespace eng {
 
 	//---------------------------------------------------------------------------
 	bool DataCallbackQueryList::AddQueryCallback(const char* name, u32 nameSize, UniformType type, const CallbackFuncion& cb) {
-		h64 hash = core::ToHash(name, nameSize);
+		h64 hash = core::Hash(name, nameSize);
 		_callbackNames.Add((ResourceHash) hash, name);
 
 		CallbackData data;

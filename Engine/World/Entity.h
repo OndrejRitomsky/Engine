@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/Common/Handle.h>
+#include <core/common/types.h>
 
 namespace eng {
 
@@ -17,5 +17,23 @@ namespace eng {
 
 		core::Handle h;
 	};
+
+
+
+	inline bool Entity::operator==(Entity rhs) {
+		return h == rhs.h;
+	}
+
+	inline bool Entity::operator!=(Entity rhs) {
+		return h != rhs.h;
+	}
+
+	inline bool Entity::IsValid() {
+		return h != MakeInvalid().h;
+	}
+
+	inline Entity Entity::MakeInvalid() {
+		return Entity{0};
+	}
 
 }

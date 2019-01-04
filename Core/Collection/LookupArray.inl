@@ -1,12 +1,10 @@
-#pragma once
+#include "lookuparray.h"
 
-#include "Core/Collection/LookupArray.h"
+#include "../common/debug.h"
+#include "../common/placement.h"
 
-#include "Core/Algorithm/Move.h"
-#include "Core/Common/Assert.h"
-#include "Core/Common/Placement.h"
-
-#include "Core/Allocator/IAllocator.h"
+#include "../algorithm/move.h"
+#include "../allocator/allocate.h"
 
 namespace core {
 	template<typename Type>
@@ -15,7 +13,6 @@ namespace core {
 		return static_cast<u32>(handle);
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	LookupArray<Type>::LookupArray() :
 		_allocator(nullptr) {
@@ -25,26 +22,23 @@ namespace core {
 		in_place_linked_list::Init(&_linked, nullptr);
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	LookupArray<Type>::~LookupArray() {
 		ASSERT(_count == 0); // cant call destructors, array doesnt know where holes are
 		if (_linked.data)
-			_allocator->Deallocate(_linked.data);
+			Deallocate(_allocator, _linked.data);
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline void LookupArray<Type>::Init(IAllocator* allocator, u32 capacity) {
 		ASSERT(!_allocator);
 		_allocator = allocator;
 
-		in_place_linked_list::Init(&_linked, _allocator->Allocate(capacity * sizeof(Type), alignof(Type)));
+		in_place_linked_list::Init(&_linked, Allocate(_allocator, capacity * sizeof(Type), alignof(Type)));
 		_capacity = capacity;
 		_count = 0;
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline void LookupArray<Type>::Remove(Handle handle) {
 		u32 index = Conversion(handle);
@@ -53,19 +47,16 @@ namespace core {
 		--_count;
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline const Type& LookupArray<Type>::Get(Handle handle) const {
 		return static_cast<const Type*>(_linked.data)[Conversion(handle)];
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline Type& LookupArray<Type>::Get(Handle handle) {
 		return static_cast<Type*>(_linked.data)[Conversion(handle)];
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline Handle LookupArray<Type>::Add(const Type& value) {
 		ReserveCapacity();
@@ -75,7 +66,6 @@ namespace core {
 		return index;
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline Handle LookupArray<Type>::Add(Type&& value) {
 		ReserveCapacity();
@@ -85,13 +75,12 @@ namespace core {
 		return index;
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	void LookupArray<Type>::ReserveCapacity() {
 		if (_linked.countWithHoles == _capacity) {
 			_capacity = _capacity > 0 ? _capacity * 2 : UNINITIALIZED_PUSH_INIT_CAPACITY;
 
-			Type* result = static_cast<Type*>(_allocator->Allocate(_capacity * sizeof(Type), alignof(Type)));
+			Type* result = static_cast<Type*>(Allocate(_allocator, _capacity * sizeof(Type), alignof(Type)));
 
 			for (u32 i = 0; i < _count; ++i) {
 				result[i] = move(static_cast<Type*>(_linked.data)[i]);
@@ -99,7 +88,7 @@ namespace core {
 			}
 
 			if (_linked.data)
-				_allocator->Deallocate(_linked.data);
+				Deallocate(_allocator, _linked.data);
 
 			_linked.data = result;
 		}

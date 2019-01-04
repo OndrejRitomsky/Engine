@@ -1,8 +1,8 @@
 #pragma once
 
-#include <Core/Common/Types.h>
+#include <core/common/types.h>
 
-#include "Engine/Resources/Resource/Resource.h"
+#include "resource.h"
 
 namespace eng {
 
@@ -13,7 +13,7 @@ namespace eng {
 		u32 texturesCount;
 		h64* textures;
 		h64 shaderProgram;
-		h64 templateHash;
+		h64 materialTemplate;
 		h64 hash;
 	};
 
@@ -21,8 +21,8 @@ namespace eng {
 		u32 texturesCount;
 		Resource* textures;
 		Resource shaderProgram;
-		Resource templateHash;
-		Resource handle;
+		Resource materialTemplate;
+		//Resource handle;
 	};
 }
 

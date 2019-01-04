@@ -1,18 +1,15 @@
 #include "FileWatcher.h"
 
-#include <Core/Collection/Array.inl>
+#include <core/common/Utility.h>
+#include <core/collection/array.inl>
+#include <core/allocator/allocate.h>
+#include <core/platform/file_system.h>
 
-#include <Core/Allocator/IAllocator.h>
 
-#include <Platform/Win32/FileSystemAPI.h>
-
-#include <Core/Common/Utility.h>
 
 #include "Engine/FileSystem/Manager/CStringHashBank.h"
 
 namespace eng {
-
-	//---------------------------------------------------------------------------
 	FileWatcher::FileWatcher(core::IAllocator* allocator, CStringHashBank* pathBank) :
 		_pathBank(pathBank) {
 
@@ -20,7 +17,6 @@ namespace eng {
 		_times.Init(allocator);
 	}
 
-	//---------------------------------------------------------------------------
 	bool FileWatcher::WatchFile(h64 hash) {
 		u64 time = CheckTime(hash);
 		if (time == 0)
@@ -32,7 +28,6 @@ namespace eng {
 		return true;
 	}
 
-	//---------------------------------------------------------------------------
 	bool FileWatcher::CheckNext(u32 count, h64& outHash) {
 		u32 size = _hashes.Count();
 		u32 checkCount = core::Min<u32>(count, size);
@@ -54,17 +49,16 @@ namespace eng {
 		return false;
 	}
 
-	//---------------------------------------------------------------------------
 	u64 FileWatcher::CheckTime(h64 hash) const {
 		const char* path = _pathBank->Get(hash);
-		win::FileHandle handle = win::FileOpenSync(path);
+		core::FileHandle handle = core::FileOpenSync(path);
 
-		if (!win::IsFileHandleValid(handle))
+		if (!core::IsFileHandleValid(handle))
 			return 0;
 
-		u64 time = win::FileModificationTime(handle);
+		u64 time = core::FileModificationTime(handle);
 
-		win::FileClose(handle);
+		core::FileClose(handle);
 		return time;
 	}
 }

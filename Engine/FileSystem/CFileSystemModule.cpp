@@ -1,12 +1,12 @@
 #include "CFileSystemModule.h"
 
-#include <Core/Common/Assert.h>
+#include <core/common/debug.h>
 
 #include "Engine/Engine.h"
 
-#include "Engine/Modules/CStaticConstructor.h"
+#include "Engine/Memory/permanent_allocator.h"
 
-#include "Engine/Memory/CMemoryModule.h"
+#include "../memory/memory_module.h"
 
 #include "Engine/FileSystem/Manager/CIOManager.h"
 #include "Engine/FileSystem/Manager/CStringHashBank.h"
@@ -33,12 +33,12 @@ namespace eng {
 	}
 
 	//---------------------------------------------------------------------------
-	void CFileSystemModule::ConstructSubsytems(CStaticConstructor* constructor) {
+	void CFileSystemModule::ConstructSubsytems(PermanentAllocator* permanentAllocator) {
 		ASSERT(_state == ModuleState::CREATED);
 		_state = ModuleState::UNINITIALIZED;
 
-		_pathBank = constructor->Construct<CStringHashBank>();
-		_ioManager = constructor->Construct<CIOManager>();
+		_pathBank = PermanentNew(permanentAllocator, CStringHashBank)();
+		_ioManager = PermanentNew(permanentAllocator, CIOManager)();
 	}
 
 	//---------------------------------------------------------------------------
@@ -69,7 +69,7 @@ namespace eng {
 	}
 
 	//---------------------------------------------------------------------------
-	void CFileSystemModule::OnEventsByType(const void* events, FileSystemEventType eventsType) {
+	void CFileSystemModule::OnEventsByType(const Frame* frame, const void* events, FileSystemEventType eventsType) {
 		// @TODO SOA
 		switch (eventsType) {
 		case FileSystemEventType::REGISTER_PATH:

@@ -1,27 +1,21 @@
 #pragma once
 
-#include <Core/Common/Types.h>
+#include <core/common/types.h>
 
-#include "Engine/Resources/Resource/Resource.h"
+#include "resource.h"
 
 namespace eng {
 
-	/*enum MeshVertexBufferType {
 
-	};*/
-
-	enum class IndexBufferType : u8 {
-		U16,
-		U32
-	};
 
 	struct MeshVertexBuffer {
 		u32 bufferSize;
-		void* buffer;
+		f32* buffer;
 	};
 
+	static const u32 MESH_INDEX_BYTE_SIZE = 2; // u16
+
 	struct MeshIndexBuffer {
-		IndexBufferType indexType;
 		u32 bufferSize;
 		void* buffer;
 	};
@@ -35,7 +29,7 @@ namespace eng {
 	struct Mesh {
 		MeshVertexBuffer vertexBuffer;
 		MeshIndexBuffer indexBuffer;
-		Resource handle;
+		//Resource handle;
 	};
 }
 

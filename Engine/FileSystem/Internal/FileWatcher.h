@@ -1,10 +1,10 @@
 #pragma once
 
-#include <Core/Common/Types.h>
-#include <Core/Collection/Array.h>
+#include <core/common/types.h>
+#include <core/collection/array.h>
 
-namespace Core {
-	class IAllocator;
+namespace core {
+	struct IAllocator;
 }
 
 namespace eng {

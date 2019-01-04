@@ -1,8 +1,9 @@
-#include "HashMapBase.h"
+#include "hashmapbase.h"
 
-#include "Core/Common/Pointer.h"
-#include "Core/Algorithm/Memory.h"
-#include "Core/Common/Utility.h"
+#include "../../common/pointer.h"
+#include "../../common/utility.h"
+#include "../../algorithm/cstring.h"
+
 
 namespace core {
 
@@ -14,12 +15,10 @@ namespace core {
 			u32 dataIndex;
 		};
 
-		//-------------------------------------------------------------------------
 		void Init(HashMapBase* base, void* data, u32 capacity) {
-			using namespace mem;
-			base->indices = static_cast<u32*>(Align(data, alignof(u32)));
-			base->nexts = static_cast<u32*>(Align(base->indices + capacity, alignof(u32)));
-			base->keys = static_cast<h64*>(Align(base->nexts + capacity, alignof(h64)));
+			base->indices = static_cast<u32*>(PointerAlign(data, alignof(u32)));
+			base->nexts = static_cast<u32*>(PointerAlign(base->indices + capacity, alignof(u32)));
+			base->keys = static_cast<h64*>(PointerAlign(base->nexts + capacity, alignof(h64)));
 
 			ASSERT((u64) (base->indices + capacity) <= (u64) base->nexts);
 			ASSERT((u64) (base->nexts + capacity) <= (u64) base->keys);
@@ -31,7 +30,6 @@ namespace core {
 				base->indices[i] = HashMapBase::INVALID_INDEX;
 		}
 
-		//---------------------------------------------------------------------------
 		FindResult FindInternal(const HashMapBase* base, h64 hash) {
 			FindResult res;
 			res.index = HashMapBase::INVALID_INDEX;
@@ -60,7 +58,6 @@ namespace core {
 			return res;
 		}
 
-		//---------------------------------------------------------------------------
 		u32 Add(HashMapBase* base, h64 hash) {
 			ASSERT(base->count < base->capacity);
 
@@ -85,7 +82,6 @@ namespace core {
 			return dataInd;
 		}
 
-		//---------------------------------------------------------------------------
 		u32 SwapRemove(HashMapBase* base, h64 hash) {
 			FindResult res = FindInternal(base, hash);
 			if (res.dataIndex == HashMapBase::INVALID_INDEX)
@@ -113,7 +109,6 @@ namespace core {
 			return res.dataIndex;
 		}
 
-		//-------------------------------------------------------------------------
 		void Clear(HashMapBase* base) {
 			base->indices = nullptr;
 			base->nexts = nullptr;
@@ -122,24 +117,20 @@ namespace core {
 			base->count = 0;
 		}
 
-		//-------------------------------------------------------------------------
 		bool IsFull(HashMapBase* base) {
 			const f32 FULL_RATIO = 0.6f;
 			return base->count >= static_cast<u32>(base->capacity * FULL_RATIO);
 		}
 
-		//-------------------------------------------------------------------------
 		u32 Find(const HashMapBase* base, h64 hash) {
 			return FindInternal(base, hash).dataIndex;
 		}
 
-		//-------------------------------------------------------------------------
 		u32 SizeRequiredForCapacity(u32 capacity) {
 			u32 needed = capacity * (2 * sizeof(u32) + sizeof(h64));
 			return needed + 2 * alignof(u32) + alignof(h64);
 		}
 
-		//-------------------------------------------------------------------------
 		void Copy(HashMapBase* dest, HashMapBase* source) {
 			if (dest->indices != source->indices) {
 				Memcpy(dest->indices, source->indices, source->count * sizeof(u32));
@@ -150,7 +141,6 @@ namespace core {
 			dest->capacity = source->capacity;
 		}
 
-		//-------------------------------------------------------------------------
 		void Move(HashMapBase* dest, HashMapBase&& source) {
 			dest->indices = source.indices;
 			dest->nexts = source.nexts;
@@ -162,6 +152,4 @@ namespace core {
 			source = {0};
 		}
 	}
-
-
 }

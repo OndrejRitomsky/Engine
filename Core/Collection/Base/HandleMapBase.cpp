@@ -1,26 +1,22 @@
-#include "HandleMapBase.h"
+#include "handlemapbase.h"
 
-#include "Core/Common/Pointer.h"
-#include "Core/Common/Assert.h"
-#include "Core/Algorithm/Memory.h"
+#include "../../common/pointer.h"
+#include "../../common/debug.h"
+#include "../../algorithm/cstring.h"
 
 namespace core {
 
 	namespace handle_map_base {
-
-		//-------------------------------------------------------------------------
 		void Init(HandleMapBase* base, void* data, u32 capacity) {
-			using namespace mem;
 			base->freeHandleFirst = INTERNAL_INVALID_INDEX;
 			base->freeHandleLast = INTERNAL_INVALID_INDEX;
-			base->handleIndices = static_cast<u32*>(Align(data, alignof(u32)));
-			base->handles = static_cast<HandleMapBase::InternalHandle*>(Align(&base->handleIndices[capacity], alignof(HandleMapBase::InternalHandle)));
+			base->handleIndices = static_cast<u32*>(PointerAlign(data, alignof(u32)));
+			base->handles = static_cast<HandleMapBase::InternalHandle*>(PointerAlign(&base->handleIndices[capacity], alignof(HandleMapBase::InternalHandle)));
 
 			base->capacity = capacity;
 			base->count = 0;
 		}
 
-		//---------------------------------------------------------------------------
 		Handle Add(HandleMapBase* base, u32& outIndex) {
 			HandleMapBase::InternalHandle handle;
 
@@ -29,13 +25,13 @@ namespace core {
 			if (base->freeHandleFirst == INTERNAL_INVALID_INDEX) {
 				HandleMapBase::InternalHandle innerHandle;
 
-				innerHandle.index = base->count;
-				innerHandle.generation = 0;
-				innerHandle.type = base->handleType;
-				innerHandle.free = 0;
+				innerHandle.internal.index = base->count;
+				innerHandle.internal.generation = 0;
+				innerHandle.internal.type = base->handleType;
+				innerHandle.internal.free = 0;
 
 				handle = innerHandle;
-				handle.index = base->count;
+				handle.internal.index = base->count;
 				base->handles[base->count] = innerHandle;
 			}
 			else {
@@ -43,29 +39,28 @@ namespace core {
 
 				HandleMapBase::InternalHandle& innerHandle = base->handles[replacedHandleIndex];
 
-				ASSERT(innerHandle.free == 1);
+				ASSERT(innerHandle.internal.free == 1);
 
-				base->freeHandleFirst = innerHandle.index;
+				base->freeHandleFirst = innerHandle.internal.index;
 
 				if (base->freeHandleFirst == INTERNAL_INVALID_INDEX) 
 					base->freeHandleLast = base->freeHandleFirst;
 
 				ASSERT(base->count < base->capacity);
-				innerHandle.index = base->count;
-				innerHandle.generation++; // overflow
-				innerHandle.free = 0;
+				innerHandle.internal.index = base->count;
+				innerHandle.internal.generation++; // overflow
+				innerHandle.internal.free = 0;
 
 				handle = innerHandle;
-				handle.index = replacedHandleIndex;
+				handle.internal.index = replacedHandleIndex;
 			}
 
-			base->handleIndices[base->count] = handle.index;
+			base->handleIndices[base->count] = handle.internal.index;
 			outIndex = base->count;
 			++base->count;
 			return handle.value;
 		}
 
-		//---------------------------------------------------------------------------
 		u32 Remove(HandleMapBase* base, const Handle& handle) {
 			ASSERT(IsHandleValid(base, handle));
 			--base->count;
@@ -73,59 +68,55 @@ namespace core {
 			HandleMapBase::InternalHandle iHandle;
 			iHandle.value = handle;
 
-			HandleMapBase::InternalHandle& innerHandle = base->handles[iHandle.index];
+			HandleMapBase::InternalHandle& innerHandle = base->handles[iHandle.internal.index];
 
-			if (innerHandle.index < base->count) {
+			if (innerHandle.internal.index < base->count) {
 				// index wasnt last, update handles set
 				u32 fixHandleIndex = base->handleIndices[base->count];
 
-				base->handleIndices[innerHandle.index] = base->handleIndices[base->count];
-				base->handles[fixHandleIndex].index = innerHandle.index;
+				base->handleIndices[innerHandle.internal.index] = base->handleIndices[base->count];
+				base->handles[fixHandleIndex].internal.index = innerHandle.internal.index;
 			}
 
-			innerHandle.index = INTERNAL_INVALID_INDEX;
-			innerHandle.free = 1;
+			innerHandle.internal.index = INTERNAL_INVALID_INDEX;
+			innerHandle.internal.free = 1;
 
 			if (base->freeHandleFirst == INTERNAL_INVALID_INDEX) {
-				base->freeHandleFirst = iHandle.index;
+				base->freeHandleFirst = iHandle.internal.index;
 				base->freeHandleLast = base->freeHandleFirst;
 			}
 			else {
-				base->handles[base->freeHandleLast].index = iHandle.index;
-				base->freeHandleLast = iHandle.index;
+				base->handles[base->freeHandleLast].internal.index = iHandle.internal.index;
+				base->freeHandleLast = iHandle.internal.index;
 			}
 
-			return iHandle.index;
+			return iHandle.internal.index;
 		}
 
-		//-------------------------------------------------------------------------
 		u32 Get(const HandleMapBase* base, const Handle& handle) {
 			ASSERT(IsHandleValid(base, handle));
 
 			HandleMapBase::InternalHandle iHandle;
 			iHandle.value = handle;
 
-			return base->handles[iHandle.index].index;
+			return base->handles[iHandle.internal.index].internal.index;
 		}
 
-		//-------------------------------------------------------------------------
 		bool IsHandleValid(const HandleMapBase* base, const Handle& handle) {
 			HandleMapBase::InternalHandle iHandle;
 			iHandle.value = handle;
 
-			if (iHandle.value == INVALID_HANDLE || iHandle.free == 1 || iHandle.type != base->handleType || iHandle.index >= base->capacity)
+			if (iHandle.value == INVALID_HANDLE || iHandle.internal.free == 1 || iHandle.internal.type != base->handleType || iHandle.internal.index >= base->capacity)
 				return false;
 
-			HandleMapBase::InternalHandle innerHandle = base->handles[iHandle.index];
-			return innerHandle.free == 0 && innerHandle.generation == iHandle.generation && innerHandle.index < base->count;
+			HandleMapBase::InternalHandle innerHandle = base->handles[iHandle.internal.index];
+			return innerHandle.internal.free == 0 && innerHandle.internal.generation == iHandle.internal.generation && innerHandle.internal.index < base->count;
 		}
 
-		//-------------------------------------------------------------------------
 		u32 SizeRequiredForCapacity(u32 capacity) {
 			return capacity * (sizeof(u32) + sizeof(h64)) + alignof(u32) + alignof(h64);
 		}
 
-		//-------------------------------------------------------------------------
 		void Copy(HandleMapBase* dest, HandleMapBase* source) {
 			if (dest->handles != source->handles) {
 				Memcpy(dest->handleIndices, source->handleIndices, source->count * sizeof(u32));

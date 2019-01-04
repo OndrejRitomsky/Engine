@@ -1,17 +1,17 @@
 #pragma once
 
-#include <Core/Common/Types.h>
-#include <Core/Collection/HandleMap.h>
-#include <Core/Collection/HashMap.h>
+#include <core/common/types.h>
+#include <core/collection/handlemap.h>
+#include <core/collection/hashmap.h>
 
-#include <Platform/Win32/FileSystemAPI.h> // get rid of this in new loader
+#include "core/platform/file_system.h" // get rid of this in new loader
 
 
 // THIS SHOULD BE REFACTORED
 // NOW Manages both the loading and waiting for loading
 
 namespace core {
-	class IAllocator;
+	struct IAllocator;
 }
 
 namespace eng {
@@ -36,7 +36,7 @@ namespace eng {
 		struct Entry {
 			u32 id;
 			Status status;
-			win::FileHandle fileHandle;
+			core::FileHandle fileHandle;
 			char* data;
 			const char* path;
 			core::IAllocator* allocator;
@@ -70,7 +70,7 @@ namespace eng {
 		u32 _loadingCount;
 		u32 _currentId;
 
-		win::CompletionPortHandle _queueHandle;
+		core::CompletionPortHandle _queueHandle;
 
 		core::HandleMap<Entry> _ids;
 

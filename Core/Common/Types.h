@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 
 typedef uintptr_t uptr;
 
@@ -22,4 +22,16 @@ typedef double f64;
 typedef uint32_t h32;
 typedef uint64_t h64;
 
+namespace core {
+	typedef u64 Handle;
+	typedef u64 MemTag;
+}
+
+static const u32 U32MIN = 0u;
+static const u32 U32MAX = 0xFFFFFFFFu;
+
+static const u64 U64MIN = 0u;
+static const u64 U64MAX = 0xFFFFFFFFFFFFFFFFu;
+
+static const u64 INVALID_HANDLE = U64MAX;
 

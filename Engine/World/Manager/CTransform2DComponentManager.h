@@ -1,18 +1,17 @@
 #pragma once
 
-#include <Core/Collection/HashMap.h>
-#include "Engine/World/Entity.h"
+#include <core/collection/hashmap.h>
 
-namespace math {
-	struct M44;
-	struct V2;
-}
+struct M44;
+struct V2;
 
 namespace core {
-	class IAllocator;
+	struct IAllocator;
 }
 
 namespace eng {
+
+	struct Entity;
 
 	struct Transform2DComponent {
 		core::Handle h;
@@ -26,21 +25,21 @@ namespace eng {
 		void Init(core::IAllocator* allocator);
 		void Reserve(u32 capacity);
 
-		Transform2DComponent Find(Entity entity) const;
+		Transform2DComponent Find(Entity* entity) const;
 
-		Transform2DComponent Create(Entity entity);
-		bool Remove(Entity entity);
+		Transform2DComponent Create(Entity* entity);
+		bool Remove(Entity* entity);
 
 		f32 Angle(Transform2DComponent handle) const;
 		void SetAngle(Transform2DComponent handle, f32 angle);
 
-		const math::V2& Position(Transform2DComponent handle) const;
-		void SetPosition(Transform2DComponent handle, const math::V2& position);
+		const V2& Position(Transform2DComponent handle) const;
+		void SetPosition(Transform2DComponent handle, const V2& position);
 
-		const math::V2& Scale(Transform2DComponent handle) const;
-		void SetScale(Transform2DComponent handle, const math::V2& scale);
+		const V2& Scale(Transform2DComponent handle) const;
+		void SetScale(Transform2DComponent handle, const V2& scale);
 
-		const math::M44& Transform(Transform2DComponent handle) const;
+		const M44& Transform(Transform2DComponent handle) const;
 
 	private:
 		void Reallocate(u32 capacity);
@@ -55,9 +54,9 @@ namespace eng {
 			Entity*   id;
 			bool*     dirty;
 			f32*      angle;
-			math::V2* position;
-			math::V2* scale;
-			math::M44* transform;
+			V2* position;
+			V2* scale;
+			M44* transform;
 		};
 
 		Data _data;

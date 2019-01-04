@@ -1,14 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|Win32">
-      <Configuration>Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Win32">
-      <Configuration>Release</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
@@ -19,61 +11,80 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Algorithm\Hash.h" />
-    <ClInclude Include="Collection\Array.h" />
-    <ClInclude Include="Collection\Base\HandleMapBase.h" />
-    <ClInclude Include="Collection\Base\HashMapBase.h" />
-    <ClInclude Include="Collection\Buffer.h" />
-    <ClInclude Include="Collection\Function.h" />
-    <ClInclude Include="Collection\HandleMap.h" />
-    <ClInclude Include="Collection\HashMap.h" />
-    <ClInclude Include="Collection\LookupArray.h" />
-    <ClInclude Include="Collection\Base\InPlaceLinkedList.h" />
-    <ClInclude Include="Algorithm\Memory.h" />
-    <ClInclude Include="Algorithm\Move.h" />
-    <ClInclude Include="Common\Assert.h" />
-    <ClInclude Include="Allocator\BuddyAllocator.h" />
-    <ClInclude Include="Allocator\HeapAllocator.h" />
-    <ClInclude Include="Allocator\IAllocator.h" />
-    <ClInclude Include="Common\Handle.h" />
-    <ClInclude Include="Common\Placement.h" />
-    <ClInclude Include="Common\Pointer.h" />
-    <ClInclude Include="Common\TypeInfo.h" />
-    <ClInclude Include="TagAllocator\MemTag.h" />
-    <ClInclude Include="TagAllocator\ITagAllocator.h" />
-    <ClInclude Include="TagAllocator\SafeTaggedBlockAllocator.h" />
-    <ClInclude Include="TagAllocator\SingleTagProxyAllocator.h" />
-    <ClInclude Include="Parallel\Collection\ThreadSafeFixedQueue.h" />
-    <ClInclude Include="Parallel\Locks\LockUtil.h" />
-    <ClInclude Include="Parallel\Locks\SpinLock.h" />
-    <ClInclude Include="Parallel\Thread.h" />
-    <ClInclude Include="Parallel\JobPool.h" />
-    <ClInclude Include="Common\Types.h" />
-    <ClInclude Include="Common\TypeLimits.h" />
-    <ClInclude Include="Common\Utility.h" />
+    <ClInclude Include="algorithm\format.h" />
+    <ClInclude Include="algorithm\hash.h" />
+    <ClInclude Include="allocator\allocate.h" />
+    <ClInclude Include="allocator\allocators.h" />
+    <ClInclude Include="collection\array.h" />
+    <ClInclude Include="collection\base\handlemapbase.h" />
+    <ClInclude Include="collection\base\hashmapbase.h" />
+    <ClInclude Include="collection\buffer.h" />
+    <ClInclude Include="collection\function.h" />
+    <ClInclude Include="Collection\handlemap.h" />
+    <ClInclude Include="Collection\hashmap.h" />
+    <ClInclude Include="Collection\lookuparray.h" />
+    <ClInclude Include="collection\base\inplacelinkedlist.h" />
+    <ClInclude Include="algorithm\cstring.h" />
+    <ClInclude Include="algorithm\move.h" />
+    <ClInclude Include="Collection\ringbuffer.h" />
+    <ClInclude Include="common\config.h" />
+    <ClInclude Include="common\debug.h" />
+    <ClInclude Include="allocator\buddy_allocator.h" />
+    <ClInclude Include="allocator\iallocators.h" />
+    <ClInclude Include="platform\log.h" />
+    <ClInclude Include="common\placement.h" />
+    <ClInclude Include="common\pointer.h" />
+    <ClInclude Include="common\type_info.h" />
+    <ClInclude Include="common\types.h" />
+    <ClInclude Include="common\utility.h" />
+    <ClInclude Include="math\m44.h" />
+    <ClInclude Include="math\utility.h" />
+    <ClInclude Include="math\v2.h" />
+    <ClInclude Include="platform\atomic.h" />
+    <ClInclude Include="platform\file_system.h" />
+    <ClInclude Include="platform\parallel.h" />
+    <ClInclude Include="parallel\job_pool.h" />
+    <ClInclude Include="parallel\lock.h" />
+    <ClInclude Include="platform\parallel_types.h" />
+    <ClInclude Include="platform\platform_types.h" />
+    <ClInclude Include="platform\timer.h" />
+    <ClInclude Include="platform\window.h" />
+    <ClInclude Include="collection\pools.h" />
+    <ClInclude Include="toolbox\json.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Algorithm\Hash.cpp" />
-    <ClCompile Include="Collection\Base\HandleMapBase.cpp" />
-    <ClCompile Include="Collection\Base\HashMapBase.cpp" />
-    <ClCompile Include="Collection\Buffer.cpp" />
-    <ClCompile Include="Collection\Base\InPlaceLinkedList.cpp" />
-    <ClCompile Include="Algorithm\Memory.cpp" />
-    <ClCompile Include="Allocator\BuddyAllocator.cpp" />
-    <ClCompile Include="Allocator\HeapAllocator.cpp" />
-    <ClCompile Include="TagAllocator\SafeTaggedBlockAllocator.cpp" />
-    <ClCompile Include="TagAllocator\SingleTagProxyAllocator.cpp" />
-    <ClCompile Include="Parallel\Locks\SpinLock.cpp" />
-    <ClCompile Include="Parallel\Thread.cpp" />
-    <ClCompile Include="Parallel\JobPool.cpp" />
+    <ClCompile Include="algorithm\format.cpp" />
+    <ClCompile Include="algorithm\hash.cpp" />
+    <ClCompile Include="allocator\allocate.cpp" />
+    <ClCompile Include="collection\base\handlemapbase.cpp" />
+    <ClCompile Include="collection\base\hashmapbase.cpp" />
+    <ClCompile Include="collection\buffer.cpp" />
+    <ClCompile Include="collection\base\inplacelinkedlist.cpp" />
+    <ClCompile Include="algorithm\cstring.cpp" />
+    <ClCompile Include="allocator\buddy_allocator.cpp" />
+    <ClCompile Include="allocator\heap_allocator.cpp" />
+    <ClCompile Include="allocator\safe_tagged_block_allocator.cpp" />
+    <ClCompile Include="allocator\single_tag_proxy_allocator.cpp" />
+    <ClCompile Include="collection\pools.cpp" />
+    <ClCompile Include="platform\log.cpp" />
+    <ClCompile Include="math\m44.cpp" />
+    <ClCompile Include="math\utility.cpp" />
+    <ClCompile Include="platform\atomic.cpp" />
+    <ClCompile Include="parallel\job_pool.cpp" />
+    <ClCompile Include="parallel\lock.cpp" />
+    <ClCompile Include="platform\file_system.cpp" />
+    <ClCompile Include="platform\parallel.cpp" />
+    <ClCompile Include="platform\timer.cpp" />
+    <ClCompile Include="platform\window.cpp" />
+    <ClCompile Include="toolbox\json.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Allocator\IAllocator.inl" />
-    <None Include="Collection\Array.inl" />
-    <None Include="Collection\HandleMap.inl" />
-    <None Include="Collection\HashMap.inl" />
-    <None Include="Collection\LookupArray.inl" />
-    <None Include="TagAllocator\ITagAllocator.inl" />
+    <None Include="Collection\array.inl" />
+    <None Include="collection\function.inl" />
+    <None Include="Collection\handlemap.inl" />
+    <None Include="Collection\hashmap.inl" />
+    <None Include="Collection\lookuparray.inl" />
+    <None Include="Collection\ringbuffer.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -81,44 +92,26 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>Core</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <ProjectName>core</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -128,12 +121,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)Build\$(Platform)_$(Configuration)\$(ProjectName)\</OutDir>
-    <IntDir>$(SolutionDir)Obj\$(Platform)_$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)build\$(Platform)_$(Configuration)\$(ProjectName)\</OutDir>
+    <IntDir>$(SolutionDir)obj\$(Platform)_$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)Build\$(Platform)_$(Configuration)\$(ProjectName)\</OutDir>
-    <IntDir>$(SolutionDir)Obj\$(Platform)_$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)build\$(Platform)_$(Configuration)\$(ProjectName)\</OutDir>
+    <IntDir>$(SolutionDir)obj\$(Platform)_$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -142,40 +135,13 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir);</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <Link>
-      <SubSystem>Windows</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -187,7 +153,8 @@
       <FunctionLevelLinking>false</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir);</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>

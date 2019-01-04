@@ -1,15 +1,15 @@
 #pragma once
 
-#include <Core/Common/Types.h>
-#include <Core/Collection/Array.h>
-#include <Core/Collection/Function.h>
+#include <core/common/types.h>
+#include <core/collection/array.h>
+#include <core/collection/function.h>
 
 #include "Engine/FileSystem/Manager/CStringHashBank.h"
 //#include "Engine/Renderer/RenderTypes.h"
 
 
 namespace core {
-	class IAllocator;
+	struct IAllocator;
 }
 
 namespace eng {

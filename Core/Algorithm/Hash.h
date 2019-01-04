@@ -6,7 +6,7 @@
 
 // Edited
 
-#include "Core/Common/Types.h"
+#include "../common/types.h"
 
 
 namespace core
@@ -17,18 +17,18 @@ namespace core
 
 	//u32 ToHash32(const void* key, u32 length);
 
-	//---------------------------------------------------------------------------
-	//---------------------------------------------------------------------------
 
-	//---------------------------------------------------------------------------
+
 	/*inline Hash32 ToHash32(const void* key, u32 length) {
 		static_assert(sizeof(Hash32) == sizeof(u32), "Hash size must match");
 		return (Hash32) MurmurHash3_x86_32(key, length, 314953lu);
 	}*/
 
-	//---------------------------------------------------------------------------
-	inline h64 ToHash(const void* key, u32 length) {
+
+	inline h64 Hash(const void* key, u32 length) {
 		static_assert(sizeof(h64) == sizeof(u64), "Hash size must match");
 		return (h64) MurmurHash64A(key, length, 314953llu);
 	}
+
+
 }

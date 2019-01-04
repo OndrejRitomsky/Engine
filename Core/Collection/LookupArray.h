@@ -1,14 +1,13 @@
 #pragma once
 
-#include "Core/Common/Types.h"
-#include "Core/Common/Handle.h"
+#include "../common/types.h"
 
-#include "Core/Collection/Base/InPlaceLinkedList.h"
+#include "base/inplacelinkedlist.h"
 
 
 namespace core {
 
-	class IAllocator;
+	struct IAllocator;
 
 	// Doesnt support reserve, only as initial capacity
 	// Doesnt support clear, doesnt know what is hole (external keys must be held)

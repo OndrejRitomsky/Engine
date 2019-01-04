@@ -1,11 +1,11 @@
 #pragma once
 
-#include <Core/Common/Types.h>
+#include <core/common/types.h>
 
-#include "Renderer/API/Command/CommandParameters.h"
-#include "Renderer/API/Command/JobPackage.h"
+#include "../command/command_parameters.h"
+#include "../command/job_package.h"
 
-#include "Renderer/API/Resources/Resource.h"
+#include "../render_resources.h"
 
 
 namespace render {

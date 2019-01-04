@@ -1,8 +1,8 @@
 #pragma once
 
 
-#include <Core/Common/Types.h>
-#include <Core/Collection/Buffer.h>
+#include <core/common/types.h>
+#include <core/collection/buffer.h>
 
 namespace eng {
 

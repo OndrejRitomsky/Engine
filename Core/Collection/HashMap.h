@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Core/Common/Types.h"
-#include "Core/Collection/Base/HashMapBase.h"
+#include "base/hashmapbase.h"
+#include "../common/types.h"
 
 namespace core {
-	class IAllocator;
+	struct IAllocator;
 
 	/**
 	* HashMap<Type> : hashmap with in separate buffer linked list collision resolution

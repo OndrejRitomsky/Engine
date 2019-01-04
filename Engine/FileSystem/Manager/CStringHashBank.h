@@ -1,13 +1,13 @@
 #pragma once
 
 
-#include <Core/Common/Types.h>
+#include <core/common/types.h>
 #include <Core/Collection/HashMap.h>
 
 
 
-namespace Core {
-	class IAllocator;
+namespace core {
+	struct IAllocator;
 }
 
 namespace eng {

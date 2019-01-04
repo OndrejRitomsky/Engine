@@ -1,32 +1,31 @@
 #pragma once
 
-#include "Core/Common/Types.h"
+#include "../common/types.h"
 
 namespace core {
+	struct IAllocator;
 
-	class IAllocator;
-
-
-	//@TODO REMOVE (plain arrays) OR IMPROVE
 	class Buffer {
 	public:
-		Buffer(IAllocator* allocator);
+		Buffer();
 		~Buffer();
 
-		void Init(u32 length);
+		void Init(IAllocator* allocator);
+		void Reserve(u64 size);
+		void Append(char* data, u64 size);
+		void AppendUnchecked(char* data, u64 size);
+		void Clear();
 
-		void Append(char* data, u32 length);
-		void Read(char* data, u32 offset, u32 length);
 
 		char* Data();
-		u32 Size();
-		u32 Capacity();
+
+		u64 Size();
 
 	private:
-		u32   _size;
-		u32   _capacity;
-		
-		char*      _data;
+		u64 _size;
+		u64 _capacity;
+
+		char* _data;
 		IAllocator* _allocator;
 	};
 }

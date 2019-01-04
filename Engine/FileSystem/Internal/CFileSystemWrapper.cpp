@@ -1,11 +1,11 @@
 #include "CFileSystemWrapper.h"
 
-#include <Core/Algorithm/Move.h>
-#include <Core/Algorithm/Memory.h>
-#include <Core/Collection/LookupArray.inl>
-#include <Core/Collection/HandleMap.inl>
+#include <core/algorithm/move.h>
+#include <core/algorithm/cstring.h>
+#include <core/collection/lookuparray.inl>
+#include <core/collection/handlemap.inl>
 
-#include <Platform/Win32/FileSystemAPI.h>
+#include <core/platform/file_system.h>
 
 namespace eng {
 
@@ -15,7 +15,7 @@ namespace eng {
 	struct CFileSystemWrapper::HandleInfo {
 		HandleStatus status;
 		u32 ioHandle;
-		win::FileHandle fileHandle;
+		core::FileHandle fileHandle;
 		u64 size;		
 		const char* path;
 	};
@@ -28,22 +28,22 @@ namespace eng {
 	};
 
 	//---------------------------------------------------------------------------
-	win::CompletionPortHandle ToCompletitionQueueHandle(void* queue) {
-		return static_cast<win::CompletionPortHandle>(queue);
+	core::CompletionPortHandle ToCompletitionQueueHandle(void* queue) {
+		return static_cast<core::CompletionPortHandle>(queue);
 	}
 
 	//---------------------------------------------------------------------------
-	void* FromCompletitionQueueHandle(win::CompletionPortHandle queue) {
+	void* FromCompletitionQueueHandle(core::CompletionPortHandle queue) {
 		return static_cast<void*>(queue);
 	}
 
 	//---------------------------------------------------------------------------
 	void OpenSizeClose(CFileSystemWrapper::HandleInfo* info) {
-		win::FileHandle fileHandle = win::FileOpenSync(info->path);
-		if (win::IsFileHandleValid(fileHandle)) {
-			info->size = win::FileSize(fileHandle);
+		core::FileHandle fileHandle = core::FileOpenSync(info->path);
+		if (core::IsFileHandleValid(fileHandle)) {
+			info->size = core::FileSize(fileHandle);
 			info->status = info->size == 0 ? HandleStatus::Error : HandleStatus::SizeKnown;
-			win::FileClose(fileHandle);
+			core::FileClose(fileHandle);
 		}
 	}
 
@@ -65,12 +65,12 @@ namespace eng {
 		_overlapped(nullptr),
 		_openHandlesCount(0),
 		_overlappedCount(0),
-		_completionQueue(FromCompletitionQueueHandle(win::MakeInvalidFileHandle())) {
+		_completionQueue(FromCompletitionQueueHandle(core::MakeInvalidFileHandle())) {
 	}
 
 	//---------------------------------------------------------------------------
 	CFileSystemWrapper::~CFileSystemWrapper() {
-		win::CompletionPortClose(ToCompletitionQueueHandle(_completionQueue));
+		core::CompletionPortClose(ToCompletitionQueueHandle(_completionQueue));
 
 		ASSERT(!_handleInfos.Count());
 		ASSERT(!_openHandlesCount);
@@ -81,8 +81,8 @@ namespace eng {
 		}
 		
 
-		_allocator->Deallocate(_overlapped);
-		_allocator->Deallocate(_overlappedStorage);
+		Deallocate(_allocator, _overlapped);
+		Deallocate(_allocator, _overlappedStorage);
 	}
 
 	//---------------------------------------------------------------------------
@@ -93,33 +93,33 @@ namespace eng {
 		u32 overlappedCount = MAXIMUM_OPEN_HANDLES + 10;
 
 		_ioInfos.Init(allocator, overlappedCount);
-		_overlappedStorage = _allocator->Allocate(sizeof(win::Overlapped) * overlappedCount, alignof(win::Overlapped));
-		_overlapped = static_cast<win::Overlapped**>(_allocator->Allocate(sizeof(win::Overlapped*) * overlappedCount, alignof(win::Overlapped*)));
+		_overlappedStorage = Allocate(_allocator, sizeof(core::Overlapped) * overlappedCount, alignof(core::Overlapped));
+		_overlapped = static_cast<core::Overlapped**>(Allocate(_allocator, sizeof(core::Overlapped*) * overlappedCount, alignof(core::Overlapped*)));
 		
 		for (u32 i = 0; i < overlappedCount; ++i)
-			_overlapped[i] = static_cast<win::Overlapped*>(_overlappedStorage) + i;
+			_overlapped[i] = static_cast<core::Overlapped*>(_overlappedStorage) + i;
 
-		_completionQueue = FromCompletitionQueueHandle(win::CompletionPortCreate(0));
+		_completionQueue = FromCompletitionQueueHandle(core::CompletionPortCreate(0));
 	}
 
 	//---------------------------------------------------------------------------
 	void CFileSystemWrapper::Update() {
 		while (true) {
-			win::CompletionKey key;
-			win::Overlapped* overlapped;
-			win::CompletionPortStatus status = win::CompletionPortQuery(ToCompletitionQueueHandle(_completionQueue), key, overlapped);
-			if (status == win::CompletionPortStatus::Empty)
+			core::CompletionKey key;
+			core::Overlapped* overlapped;
+			core::CompletionPortStatus status = core::CompletionPortQuery(ToCompletitionQueueHandle(_completionQueue), key, overlapped);
+			if (status == core::CompletionPortStatus::Empty)
 				break;
 
 			IOInfo& io = _ioInfos.Get(key);
 			HandleInfo& handleInfo = _handleInfos.Get(io.handle);
 
-			if (status == win::CompletionPortStatus::Error) {
+			if (status == core::CompletionPortStatus::Error) {
 				handleInfo.status = HandleStatus::Error;
 			}
-			else if (status == win::CompletionPortStatus::Ok) {
+			else if (status == core::CompletionPortStatus::Ok) {
 				handleInfo.status = HandleStatus::Finished;
-				win::FileClose(handleInfo.fileHandle);
+				core::FileClose(handleInfo.fileHandle);
 				--_openHandlesCount;
 			}
 
@@ -133,11 +133,11 @@ namespace eng {
 				break;
 
 			if (info.status == HandleStatus::ReadOnHold) {
-				info.fileHandle = win::FileOpenAsync(info.path);
-				if (win::IsFileHandleValid(info.fileHandle)) {
-					info.size = win::FileSize(info.fileHandle);
+				info.fileHandle = core::FileOpenAsync(info.path);
+				if (core::IsFileHandleValid(info.fileHandle)) {
+					info.size = core::FileSize(info.fileHandle);
 					if (!info.size) {
-						win::FileClose(info.fileHandle);
+						core::FileClose(info.fileHandle);
 					}
 					else {
 						++_openHandlesCount;
@@ -154,8 +154,8 @@ namespace eng {
 	void CFileSystemWrapper::CreateIOHandles(u32 count, core::Handle* outHandles) {
 		for (u32 i = 0; i < count; ++i) {
 			HandleInfo info;
-			Memset(&info, 0, sizeof(info));
-			info.fileHandle = win::MakeInvalidFileHandle();
+			core::Memset(&info, 0, sizeof(info));
+			info.fileHandle = core::MakeInvalidFileHandle();
 			info.status = HandleStatus::Created;
 			outHandles[i] = _handleInfos.Add(core::move(info));
 		}
@@ -170,8 +170,8 @@ namespace eng {
 			ASSERT(info.status == HandleStatus::Created);
 			info.status = HandleStatus::Error;
 
-			win::FileHandle fileHandle = win::FileOpenAsync(paths[i]);
-			if (win::IsFileHandleValid(fileHandle)) {
+			core::FileHandle fileHandle = core::FileOpenAsync(paths[i]);
+			if (core::IsFileHandleValid(fileHandle)) {
 				++_openHandlesCount;
 				info.fileHandle = fileHandle;
 				info.status = HandleStatus::Open;
@@ -189,7 +189,7 @@ namespace eng {
 			HandleInfo& info = _handleInfos.Get(handles[i]);
 
 			if (info.status == HandleStatus::Open) {
-				info.size = win::FileSize(info.fileHandle);
+				info.size = core::FileSize(info.fileHandle);
 				info.status = info.size == 0 ? HandleStatus::Error : HandleStatus::OpenSizeKnown;
 			}
 			else if (info.status == HandleStatus::Created) {
@@ -207,11 +207,11 @@ namespace eng {
 			ASSERT(info.status == HandleStatus::Created);
 
 			info.status = HandleStatus::Error;
-			info.fileHandle = win::FileOpenAsync(paths[i]);
-			if (win::IsFileHandleValid(info.fileHandle)) {
-				info.size = win::FileSize(info.fileHandle);
+			info.fileHandle = core::FileOpenAsync(paths[i]);
+			if (core::IsFileHandleValid(info.fileHandle)) {
+				info.size = core::FileSize(info.fileHandle);
 				if (info.size == 0) {
-					win::FileClose(info.fileHandle);
+					core::FileClose(info.fileHandle);
 				}
 				else {
 					info.status = HandleStatus::OpenSizeKnown;
@@ -237,24 +237,24 @@ namespace eng {
 			return;
 		}
 
-		win::CompletionIOParams params;
+		core::CompletionIOParams params;
 		io.overlappedIndex = _overlappedCount;
 		params.id = static_cast<u32>(_ioInfos.Add(io));
 		params.completionPort = ToCompletitionQueueHandle(_completionQueue);
 		params.file = handleInfo->fileHandle;
 		params.overlapped = _overlapped[io.overlappedIndex];
 
-		win::Error err = win::FileReadAsync(params, io.buffer, static_cast<u32>(io.bufferSize));
+		core::Error err = core::FileReadAsync(params, io.buffer, static_cast<u32>(io.bufferSize));
 
-		if (err != win::Error::Ok)
+		if (err != core::Error::Ok)
 			_ioInfos.Remove(params.id);
 
-		if (err == win::Error::Ok) {
+		if (err == core::Error::Ok) {
 			++_overlappedCount;
 			handleInfo->status = HandleStatus::ReadPending;
 			handleInfo->ioHandle = params.id;
 		}
-		else if (err != win::Error::Unknown) { // unknown will just return status error
+		else if (err != core::Error::Unknown) { // unknown will just return status error
 			ASSERT(false);
 		}
 	}
@@ -266,18 +266,20 @@ namespace eng {
 
 			if (handleInfo.status == HandleStatus::OpenSizeKnown) {
 				ASSERT(_overlappedCount <= _openHandlesCount);
-				AsyncReadFile(&handleInfo, CreateIOInfo(handles[i], buffers[i], buffersSizes[i]));
+				auto ioInfo = CreateIOInfo(handles[i], buffers[i], buffersSizes[i]);
+				AsyncReadFile(&handleInfo, ioInfo);
 			}
 			else if (handleInfo.status == HandleStatus::SizeKnown) {
 				if (_openHandlesCount < MAXIMUM_OPEN_HANDLES) {
-					handleInfo.fileHandle = win::FileOpenSync(handleInfo.path);
+					handleInfo.fileHandle = core::FileOpenSync(handleInfo.path);
 
-					if (!win::IsFileHandleValid(handleInfo.fileHandle)) {
+					if (!core::IsFileHandleValid(handleInfo.fileHandle)) {
 						handleInfo.status = HandleStatus::Error;
 					}
 					else {
 						ASSERT(_overlappedCount <= _openHandlesCount);
-						AsyncReadFile(&handleInfo, CreateIOInfo(handles[i], buffers[i], buffersSizes[i]));
+						auto ioInfo = CreateIOInfo(handles[i], buffers[i], buffersSizes[i]);
+						AsyncReadFile(&handleInfo, ioInfo);
 					}
 				}
 				else {
@@ -302,8 +304,8 @@ namespace eng {
 			case HandleStatus::Open:
 			case HandleStatus::OpenSizeKnown:
 			case HandleStatus::Finished:
-				win::FileClose(info.fileHandle);
-				info.fileHandle = win::MakeInvalidFileHandle();
+				core::FileClose(info.fileHandle);
+				info.fileHandle = core::MakeInvalidFileHandle();
 			case HandleStatus::ReadOnHold:
 				--_openHandlesCount;
 				break;
@@ -331,7 +333,7 @@ namespace eng {
 			case HandleStatus::Open:
 			case HandleStatus::OpenSizeKnown:
 				ASSERT(false); // should have been closed
-				win::FileClose(info.fileHandle);
+				core::FileClose(info.fileHandle);
 			case HandleStatus::ReadOnHold:
 				--_openHandlesCount;
 			case HandleStatus::SizeKnown: 

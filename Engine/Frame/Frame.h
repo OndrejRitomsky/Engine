@@ -1,7 +1,10 @@
 #pragma once
 
-#include <Core/Common/Types.h>
-#include <Core/TagAllocator/MemTag.h>
+#include <core/common/types.h>
+
+namespace core {
+	struct ITagAllocator;
+}
 
 namespace eng {
 
@@ -14,6 +17,8 @@ namespace eng {
 		double realDelta;
 
 		u64 frameIndex; 
+
+		core::ITagAllocator* tagAllocator; // This will be used in non const ways even though Frame will be const
 	};
 
 }

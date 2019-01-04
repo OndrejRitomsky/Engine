@@ -1,10 +1,10 @@
 #pragma once
 
-#include <Core/Common/Types.h>
-#include <Core/Collection/HandleMap.h>
-#include <Core/Collection/LookupArray.h>
+#include <core/common/types.h>
+#include <core/collection/handlemap.h>
+#include <core/collection/lookuparray.h>
 
-namespace win {
+namespace core {
 	struct Overlapped;
 }
 
@@ -95,7 +95,7 @@ namespace eng {
 		void* _completionQueue;
 
 		void* _overlappedStorage;
-		win::Overlapped** _overlapped;
+		core::Overlapped** _overlapped;
 
 		core::HandleMap<HandleInfo> _handleInfos;
 		core::LookupArray<IOInfo> _ioInfos; // returned index is used as completion key

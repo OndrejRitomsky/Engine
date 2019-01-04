@@ -1,16 +1,16 @@
 #pragma once
 
-#include <Core/Common/Types.h>
+#include <core/common/types.h>
 
-#include "Engine/Modules/ModuleState.h"
+#include "../module.h"
 
 #include "Engine/FileSystem/FileSystemEvent.h"
 
 namespace eng {
 	struct Engine;
 	struct Frame;
+	struct PermanentAllocator;
 
-	class CStaticConstructor;
 	class CIOManager;
 	class CStringHashBank;
 
@@ -20,12 +20,12 @@ namespace eng {
 		~CFileSystemModule();
 
 		ModuleState State();
-		void ConstructSubsytems(CStaticConstructor* constructor);
+		void ConstructSubsytems(PermanentAllocator* permanentAllocator);
 		void Init(Engine* engine);
 
 		void Update(const Frame* frame);
 
-		void OnEventsByType(const void* events, FileSystemEventType eventsType);
+		void OnEventsByType(const Frame* frame, const void* events, FileSystemEventType eventsType);
 
 		void QueryEventsByType(FileSystemEventType type, void* outEvents);
 

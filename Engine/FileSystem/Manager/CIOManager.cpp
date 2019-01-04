@@ -1,8 +1,10 @@
 #include "CIOManager.h"
 
-#include <Core/Common/Assert.h>
-#include <Core/Collection/HashMap.inl>
-#include <Core/Common/Pointer.h>
+#include <core/common/debug.h>
+#include <core/collection/hashmap.inl>
+#include <core/common/pointer.h>
+
+#include <core/algorithm/cstring.h>
 
 #include "Engine/FileSystem/Manager/CStringHashBank.h"
 #include "Engine/FileSystem/FileSystemEvent.h"
@@ -18,19 +20,16 @@ namespace eng {
 		u64 extraData;
 	};
 
-	//---------------------------------------------------------------------------
 	CIOManager::CIOManager() :
 		_stringBank(nullptr),
 		_allocator(nullptr),
 		_loadsFinished{0} {
 	}
 
-	//---------------------------------------------------------------------------
 	CIOManager::~CIOManager() {
-		_allocator->Deallocate(_loadsFinished.nameHashes);
+		Deallocate(_allocator, _loadsFinished.nameHashes);
 	}
 
-	//---------------------------------------------------------------------------
 	void CIOManager::Init(core::IAllocator* allocator, const CStringHashBank* stringBank) {
 		_stringBank = stringBank;
 		_allocator = allocator;
@@ -46,22 +45,20 @@ namespace eng {
 		u64 size = LOAD_EVENTS_CAPACITY * ELEMENTS_SIZE + EXTRA_SIZE;
 
 		_loadsFinished.count = 0;
-		_loadsFinished.nameHashes = static_cast<h64*>(allocator->Allocate(size, alignof(h64)));
-		_loadsFinished.extraData = static_cast<u64*>(core::mem::Align(&_loadsFinished.nameHashes[LOAD_EVENTS_CAPACITY], alignof(u64)));
-		_loadsFinished.bufferSizes = static_cast<u64*>(core::mem::Align(&_loadsFinished.extraData[LOAD_EVENTS_CAPACITY], alignof(u64)));
-		_loadsFinished.buffers = static_cast<char**>(core::mem::Align(&_loadsFinished.bufferSizes[LOAD_EVENTS_CAPACITY], alignof(char*)));
+		_loadsFinished.nameHashes = static_cast<h64*>(Allocate(_allocator, size, alignof(h64)));
+		_loadsFinished.extraData = static_cast<u64*>(core::PointerAlign(&_loadsFinished.nameHashes[LOAD_EVENTS_CAPACITY], alignof(u64)));
+		_loadsFinished.bufferSizes = static_cast<u64*>(core::PointerAlign(&_loadsFinished.extraData[LOAD_EVENTS_CAPACITY], alignof(u64)));
+		_loadsFinished.buffers = static_cast<char**>(core::PointerAlign(&_loadsFinished.bufferSizes[LOAD_EVENTS_CAPACITY], alignof(char*)));
 	}
 
-
-	//---------------------------------------------------------------------------
 	void CIOManager::Load(const FileSystemEventLoad* loadEvents, u32 eventsCount) {
 		// this shouldnt happen now, it should be stored for later in update
 		// @TODO @OPTIMIZE with tag
 
 		ASSERT(eventsCount < 100);
 
-		core::Handle* handles = static_cast<core::Handle*>(_allocator->Allocate(sizeof(core::Handle) * eventsCount, alignof(core::Handle*)));
-		const char** paths = static_cast<const char**>(_allocator->Allocate(sizeof(char*) * eventsCount, alignof(char*)));
+		core::Handle* handles = static_cast<core::Handle*>(Allocate(_allocator, sizeof(core::Handle) * eventsCount, alignof(core::Handle*)));
+		const char** paths = static_cast<const char**>(Allocate(_allocator, sizeof(char*) * eventsCount, alignof(char*)));
 
 		for (u32 i = 0; i < eventsCount; ++i) {
 			paths[i] = _stringBank->Get(loadEvents[i].nameHash);
@@ -69,17 +66,17 @@ namespace eng {
 		}
 
 
-		u64* sizes = static_cast<u64*>(_allocator->Allocate(sizeof(u64) * eventsCount, alignof(u64)));
+		u64* sizes = static_cast<u64*>(Allocate(_allocator, sizeof(u64) * eventsCount, alignof(u64)));
 
 		_fileSystem.CreateIOHandles(eventsCount, handles);
 		_fileSystem.OpenFilesGetSize(handles, paths, eventsCount);
 		_fileSystem.QuerySizes(handles, eventsCount, sizes);
 
-		char** buffers = static_cast<char**>(_allocator->Allocate(sizeof(char*) * eventsCount, alignof(char*)));
+		char** buffers = static_cast<char**>(Allocate(_allocator, sizeof(char*) * eventsCount, alignof(char*)));
 
 		for (u32 i = 0; i < eventsCount; ++i) {
 			ASSERT(sizes[i]);
-			buffers[i] = static_cast<char*>(_allocator->Allocate(sizes[i] + 1, alignof(void*)));
+			buffers[i] = static_cast<char*>(Allocate(_allocator, sizes[i] + 1, alignof(void*)));
 			buffers[i][sizes[i]] = '\0';
 		}
 
@@ -90,13 +87,12 @@ namespace eng {
 			_resourceToLoadData.Add(loadEvents[i].nameHash, LoadData{sizes[i] + 1, buffers[i], loadEvents[i].extraData});
 		}
 
-		_allocator->Deallocate(paths);
-		_allocator->Deallocate(sizes);
-		_allocator->Deallocate(buffers);
-		_allocator->Deallocate(handles);
+		Deallocate(_allocator, paths);
+		Deallocate(_allocator, sizes);
+		Deallocate(_allocator, buffers);
+		Deallocate(_allocator, handles);
 	}
 
-	//---------------------------------------------------------------------------
 	void CIOManager::Update() {
 		_fileSystem.Update();
 
@@ -108,7 +104,7 @@ namespace eng {
 		if (!count)
 			return;
 
-		HandleStatus* status = static_cast<HandleStatus*>(_allocator->Allocate(sizeof(HandleStatus) * count, alignof(HandleStatus)));
+		HandleStatus* status = static_cast<HandleStatus*>(Allocate(_allocator, sizeof(HandleStatus) * count, alignof(HandleStatus)));
 		_fileSystem.QueryStatus(it.values, count, status);
 
 		u32 i = 0;
@@ -139,16 +135,15 @@ namespace eng {
 		}
 
 		ASSERT(_loadsFinished.count < LOAD_EVENTS_CAPACITY); // its ok, just maybe rework it
-		_allocator->Deallocate(status);
+		Deallocate(_allocator, status);
 	}
 
-	//---------------------------------------------------------------------------
 	void CIOManager::QueryEventsByType(FileSystemEventType type, void* outEvents) {
 		switch (type) {
 		case FileSystemEventType::LOADED:
 		{
 			FileSystemLoadedEvents* le = static_cast<FileSystemLoadedEvents*>(outEvents);
-			memcpy(le, &_loadsFinished, sizeof(FileSystemLoadedEvents));
+			core::Memcpy(le, &_loadsFinished, sizeof(FileSystemLoadedEvents));
 			break;
 		}
 		default:
@@ -157,8 +152,11 @@ namespace eng {
 		}
 	}
 
-	//---------------------------------------------------------------------------
 	void CIOManager::ClearPendingEvents() {
+		for (u32 i = 0; i < _loadsFinished.count; ++i) {
+			Deallocate(_allocator, _loadsFinished.buffers[i]);
+		}
+
 		_loadsFinished.count = 0;
 	}
 }

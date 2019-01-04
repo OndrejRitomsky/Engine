@@ -1,31 +1,37 @@
 #pragma once
 
-#include "Engine/Export.h"
+#include "Engine/export.h"
+
+
+//#include "Renderer.h"
 
 namespace core {
-	class IAllocator;
+	struct IAllocator;
 	class JobPool;
 }
 
 namespace eng {
-	class CResourceModule;
-	class CMemoryModule;
-	class CRenderModule;
-	class CFrameModule;
-	class CStaticConstructor;
+	class ResourceModule;
+	class MemoryModule;
+	class RenderModule;
+	class FrameModule;
 	class CFileSystemModule;
-
+	class PlatformModule;
+	class WorldModule;
 
 	struct Engine {
-		CMemoryModule* memoryModule;
-		CResourceModule* resourceModule;
-		CRenderModule* renderModule;
-		CFrameModule* frameModule;
+		MemoryModule* memoryModule;
+		ResourceModule* resourceModule;
+		RenderModule* renderModule;
+		FrameModule* frameModule;
+		PlatformModule* platformModule;
+		WorldModule* worldModule;
 
 		CFileSystemModule* fileSystemModule;
 
 		core::JobPool* jobPool;
-		CStaticConstructor* _constructor;
+
+		//Renderer renderer;
 	};
 
 	// @TODO doesnt really need 4 functions

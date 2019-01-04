@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Core/Collection/HashMap.h>
+#include <core/collection/hashmap.h>
 
 #include "Engine/FileSystem/FileSystemEvent.h"
 #include "Engine/FileSystem/Internal/CFileSystemWrapper.h"

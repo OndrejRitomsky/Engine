@@ -1,8 +1,8 @@
 #include "CStringHashBank.h"
 
 #include <string.h>
-#include <Core/Collection/HashMap.inl>
-#include <Core/Allocator/IAllocator.inl>
+#include <core/collection/hashmap.inl>
+#include <core/allocator/allocate.h>
 
 namespace eng {
 
@@ -14,7 +14,7 @@ namespace eng {
 	//---------------------------------------------------------------------------
 	CStringHashBank::~CStringHashBank() {
 		for (auto& value : _texts)
-			_stringAllocator->Deallocate(value);
+			Deallocate(_stringAllocator, value);
 	}
 
 	//---------------------------------------------------------------------------
@@ -25,12 +25,12 @@ namespace eng {
 
 	//---------------------------------------------------------------------------
 	void CStringHashBank::Add(h64 hash, const char* text, u32 length) {
-		void* data = _stringAllocator->Allocate(length, alignof(char));
-		Memcpy(data, text, length);
+		void* data = Allocate(_stringAllocator, length, alignof(char));
+		core::Memcpy(data, text, length);
 		bool res = _texts.Add(hash, static_cast<char*>(data));
 
 		if (!res)
-			_stringAllocator->Deallocate(data);
+			Deallocate(_stringAllocator, data);
 	}
 
 	//---------------------------------------------------------------------------

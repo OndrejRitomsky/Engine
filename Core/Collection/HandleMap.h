@@ -1,13 +1,11 @@
 #pragma once
 
-#include "Core/Common/Types.h"
-#include "Core/Common/Handle.h"
-
-#include "Core/Collection/Base/HandleMapBase.h"
+#include "../common/types.h"
+#include "base/handlemapbase.h"
 
 namespace core {
 
-	class IAllocator;
+	struct IAllocator;
 
 	/**
 	* HandleMap<Type> : O(1) lookup container
@@ -15,7 +13,6 @@ namespace core {
 	* Data are contiguous, iterating is without indirection
 	*/
 
-	// @TODO @REWORK 3 arrays into SOA
 	template<typename Type>
 	class HandleMap {
 	private:

@@ -1,9 +1,6 @@
 #pragma once
 
-#include "Core/Common/Types.h"
-#include "Core/Common/TypeLimits.h"
-#include "Core/Common/Handle.h"
-
+#include "../../common/types.h"
 namespace core {
 
 	static const u32 INTERNAL_INVALID_INDEX = U32MAX;
@@ -15,7 +12,7 @@ namespace core {
 				u16 generation;
 				u16 type : 15;
 				u16 free : 1;
-			};
+			} internal;
 
 			Handle value;
 		};

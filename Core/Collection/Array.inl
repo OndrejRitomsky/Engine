@@ -1,18 +1,15 @@
 #pragma once
 
-#include "Core/Common/Types.h"
+#include "../common/types.h"
+#include "../common/placement.h"
+#include "../common/debug.h"
 
-#include "Core/Common/Types.h"
-#include "Core/Common/Assert.h"
-#include "Core/Algorithm/Memory.h"
-#include "Core/Algorithm/Move.h"
+#include "../algorithm/cstring.h"
+#include "../algorithm/move.h"
+#include "../allocator/allocate.h"
 
-#include "Core/Allocator/IAllocator.h"
-#include "Core/Allocator/IAllocator.inl"
 
 namespace core {
-
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	Array<Type>::Array() :
 		_count(0),
@@ -21,13 +18,11 @@ namespace core {
 		_allocator(nullptr) {
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	Array<Type>::~Array() {
 		Destroy(_allocator, _data, _count);
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	Array<Type>::Array(const Array<Type>& oth) :
 		_allocator(oth._allocator),
@@ -43,7 +38,6 @@ namespace core {
 			_data[i] = oth._data[i];
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	Array<Type>::Array(Array<Type>&& oth) :
 		_data(oth._data),
@@ -57,13 +51,11 @@ namespace core {
 	}
 
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	void Array<Type>::Init(IAllocator* allocator) {
 		_allocator = allocator;
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	Array<Type>& Array<Type>::operator=(const Array<Type>& rhs) {
 		Type* oldData = _data;
@@ -82,7 +74,6 @@ namespace core {
 		return *this;
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	Array<Type>& Array<Type>::operator=(Array<Type>&& rhs) {
 		Type* oldData = _data;
@@ -105,69 +96,58 @@ namespace core {
 		return *this;
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline Type& Array<Type>::operator[](u32 index) {
 		ASSERT(index < _count);
 		return _data[index];
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline const Type& Array<Type>::operator[](u32 index) const {
 		ASSERT(index < _count);
 		return _data[index];
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline bool Array<Type>::IsEmpty() const {
 		return _count == 0;
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline u32 Array<Type>::Count() const {
 		return _count;
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline u32 Array<Type>::Capacity() const {
 		return _capacity;
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline Type* Array<Type>::begin() {
 		return _data;
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline const Type* Array<Type>::cbegin() const {
 		return _data;
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline Type* Array<Type>::end() {
 		return _data + _count;
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline const Type* Array<Type>::cend() const {
 		return _data + _count;
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline void Array<Type>::Compact() {
 		Reallocate(_count);
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline void Array<Type>::Reserve(u32 capacity) {
 		if (capacity <= _capacity)
@@ -176,21 +156,18 @@ namespace core {
 		Reallocate(capacity);
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline void Array<Type>::Push(const Type& value) {
 		ReservePush();
 		Placement(_data + _count++) Type(value);
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline void Array<Type>::Push(Type&& value) {
 		ReservePush();
 		Placement(_data + _count++) Type(move(value));
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline void Array<Type>::PushValues(const Type* values, u32 count) {
 		u32 doubleCapacity = 2 * _capacity;
@@ -202,7 +179,6 @@ namespace core {
 		_count += count;
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline void Array<Type>::Remove(u32 index) {
 		ASSERT(index < _count);
@@ -214,14 +190,12 @@ namespace core {
 			_data[_count].~Type();
 		}
 	}
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline Type& Array<Type>::Top() {
 		ASSERT(_count > 0);
 		return _data[_count - 1];
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline void Array<Type>::Pop() {
 		ASSERT(_count > 0);
@@ -229,7 +203,6 @@ namespace core {
 		_data[_count].~Type();
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline void Array<Type>::Clear() {
 		for (u32 i = 0; i < _count; ++i)
@@ -238,7 +211,6 @@ namespace core {
 		_count = 0;
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline u32 Array<Type>::Find(const Type& value) {
 		for (u32 i = 0; i < _count; ++i) {
@@ -248,28 +220,26 @@ namespace core {
 		return INVALID_INDEX;
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	inline void Array<Type>::ReservePush() {
 		if (_count == _capacity)
 			Reallocate(_capacity == 0 ? UNINITIALIZED_PUSH_INIT_CAPACITY : _capacity * 2);
 	}
 
-	//---------------------------------------------------------------------------
 	template<typename Type>
 	void Array<Type>::Reallocate(u32 capacity) {
 		if (capacity < _count)
 			return;
 
 		_capacity = capacity;
-		Type* result = static_cast<Type*>(_allocator->Allocate(capacity * sizeof(Type), alignof(Type)));
+		Type* result = static_cast<Type*>(Allocate(_allocator, capacity * sizeof(Type), alignof(Type)));
 		for (u32 i = 0; i < _count; ++i) {
 			result[i] = move(_data[i]);
 			_data[i].~Type();
 		}
 
 		if (_data)
-			_allocator->Deallocate(_data);
+			Deallocate(_allocator, _data);
 
 		_data = result;
 	}
@@ -279,7 +249,7 @@ namespace core {
 		if (data) {
 			for (u32 i = 0; i < count; ++i)
 				data[i].~Type();
-			allocator->Deallocate(data);
+			Deallocate(allocator, data);
 		}
 	}
 
