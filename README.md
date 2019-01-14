@@ -1,1 +1,0 @@
-Just a playground to learn and practice, someday maybe game engine.
