@@ -1,0 +1,4 @@
+{
+	"path" : "assets/material/box_material_template.json",
+	"shader_program" : "assets/shader/box_program.json"
+}

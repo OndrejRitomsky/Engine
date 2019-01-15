@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="platform\atomic.h" />
+    <ClInclude Include="platform\file_system.h" />
+    <ClInclude Include="platform\parallel.h" />
+    <ClInclude Include="platform\parallel_types.h" />
+    <ClInclude Include="platform\timer.h" />
+    <ClInclude Include="platform\window.h" />
+    <ClInclude Include="parallel\job_pool.h" />
+    <ClInclude Include="parallel\lock.h" />
+    <ClInclude Include="math\m44.h" />
+    <ClInclude Include="math\utility.h" />
+    <ClInclude Include="math\v2.h" />
+    <ClInclude Include="common\debug.h" />
+    <ClInclude Include="common\placement.h" />
+    <ClInclude Include="common\pointer.h" />
+    <ClInclude Include="common\type_info.h" />
+    <ClInclude Include="common\types.h" />
+    <ClInclude Include="common\utility.h" />
+    <ClInclude Include="collection\array.h" />
+    <ClInclude Include="collection\buffer.h" />
+    <ClInclude Include="collection\function.h" />
+    <ClInclude Include="collection\pools.h" />
+    <ClInclude Include="allocator\allocate.h" />
+    <ClInclude Include="allocator\allocators.h" />
+    <ClInclude Include="allocator\buddy_allocator.h" />
+    <ClInclude Include="allocator\iallocators.h" />
+    <ClInclude Include="algorithm\hash.h" />
+    <ClInclude Include="algorithm\move.h" />
+    <ClInclude Include="Collection\hashmap.h" />
+    <ClInclude Include="Collection\handlemap.h" />
+    <ClInclude Include="Collection\lookuparray.h" />
+    <ClInclude Include="Collection\ringbuffer.h" />
+    <ClInclude Include="collection\base\handlemapbase.h" />
+    <ClInclude Include="collection\base\hashmapbase.h" />
+    <ClInclude Include="collection\base\inplacelinkedlist.h" />
+    <ClInclude Include="platform\platform_types.h" />
+    <ClInclude Include="platform\log.h" />
+    <ClInclude Include="algorithm\cstring.h" />
+    <ClInclude Include="algorithm\format.h" />
+    <ClInclude Include="toolbox\json.h" />
+    <ClInclude Include="common\config.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="platform\atomic.cpp" />
+    <ClCompile Include="platform\file_system.cpp" />
+    <ClCompile Include="platform\parallel.cpp" />
+    <ClCompile Include="platform\timer.cpp" />
+    <ClCompile Include="platform\window.cpp" />
+    <ClCompile Include="parallel\job_pool.cpp" />
+    <ClCompile Include="parallel\lock.cpp" />
+    <ClCompile Include="math\m44.cpp" />
+    <ClCompile Include="math\utility.cpp" />
+    <ClCompile Include="collection\buffer.cpp" />
+    <ClCompile Include="collection\pools.cpp" />
+    <ClCompile Include="allocator\buddy_allocator.cpp" />
+    <ClCompile Include="allocator\heap_allocator.cpp" />
+    <ClCompile Include="allocator\safe_tagged_block_allocator.cpp" />
+    <ClCompile Include="allocator\single_tag_proxy_allocator.cpp" />
+    <ClCompile Include="algorithm\hash.cpp" />
+    <ClCompile Include="collection\base\handlemapbase.cpp" />
+    <ClCompile Include="collection\base\hashmapbase.cpp" />
+    <ClCompile Include="collection\base\inplacelinkedlist.cpp" />
+    <ClCompile Include="allocator\allocate.cpp" />
+    <ClCompile Include="platform\log.cpp" />
+    <ClCompile Include="algorithm\cstring.cpp" />
+    <ClCompile Include="algorithm\format.cpp" />
+    <ClCompile Include="toolbox\json.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Collection\array.inl" />
+    <None Include="Collection\hashmap.inl" />
+    <None Include="Collection\handlemap.inl" />
+    <None Include="Collection\lookuparray.inl" />
+    <None Include="Collection\ringbuffer.inl" />
+    <None Include="collection\function.inl" />
+  </ItemGroup>
+</Project>

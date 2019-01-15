@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="gl\gl_render_device.h" />
+    <ClInclude Include="gl\gl_wrapper.h" />
+    <ClInclude Include="API\render_util.h" />
+    <ClInclude Include="API\render_context.h" />
+    <ClInclude Include="API\render_context_stream.h" />
+    <ClInclude Include="API\irender_device.h" />
+    <ClInclude Include="api\internal\commands.h" />
+    <ClInclude Include="api\command\command_parameters.h" />
+    <ClInclude Include="api\command\command_proxy.h" />
+    <ClInclude Include="api\command\job_package.h" />
+    <ClInclude Include="api\command\uniform.h" />
+    <ClInclude Include="API\render_resources.h" />
+    <ClInclude Include="api\resource_context.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="gl\gl_render_device.cpp" />
+    <ClCompile Include="API\render_context.cpp" />
+    <ClCompile Include="API\render_context_stream.cpp" />
+    <ClCompile Include="api\resource_context.cpp" />
+  </ItemGroup>
+</Project>

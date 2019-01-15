@@ -1,0 +1,5 @@
+{
+	"path" : "assets/render_object/box_render_object.json",
+	"mesh" : "assets/mesh/box_untextured.json",
+	"material" : "assets/material/box_material.json"
+}
