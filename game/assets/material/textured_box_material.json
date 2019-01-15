@@ -1,6 +1,0 @@
-{
-	"path" : "assets/material/textured_box_material.json",
-	"shader_program" : "assets/shader/textured_box_program.json",
-	"textures" : ["assets/texture/wall.jpg"],
-	"material_template" : "assets/material/textured_box_material_template.json"
-}

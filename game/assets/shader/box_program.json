@@ -1,5 +1,0 @@
-{
-	"path" : "assets/shader/box_program.json",
-	"vertex_stage" : "assets/shader/box_vs.glsl",
-	"fragment_stage" : "assets/shader/box_fs.glsl"
-}

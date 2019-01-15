@@ -1,6 +1,0 @@
-{
-	"path" : "assets/material/box_material.json",
-	"shader_program" : "assets/shader/box_program.json",
-	"textures" : [],
-	"material_template" : "assets/material/box_material_template.json"
-}

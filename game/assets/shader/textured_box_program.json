@@ -1,5 +1,0 @@
-{
-	"path" : "assets/shader/textured_box_program.json",
-	"vertex_stage" : "assets/shader/textured_box_vs.glsl",
-	"fragment_stage" : "assets/shader/textured_box_fs.glsl"
-}

@@ -1,5 +1,0 @@
-{
-	"path" : "assets/render_object/textured_box_render_object.json",
-	"mesh" : "assets/mesh/box_textured.json",
-	"material" : "assets/material/textured_box_material.json"
-}
